@@ -94,7 +94,19 @@ function renderDashboard() {
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
       <div>
         <h2>📊 Dashboard</h2>
-        <p>Resumen general del equipo — <strong style="color:var(--bg-panel)">Actualizado al ${APP.config.fechaActualizacion || new Date().toLocaleDateString('es-PE',{year:'numeric',month:'long',day:'numeric'})}</strong></p>
+        <p>Resumen general del equipo — <strong style="color:var(--bg-panel)">${(function(){
+          const gabinImp = APP.importaciones && APP.importaciones.find(i => i.tipo === 'RRHH Gabin');
+          const fn = gabinImp && gabinImp.archivo;
+          if (fn) {
+            const months = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+            let y, m, d;
+            const m1 = fn.match(/(\d{4})[-_. /]?(\d{2})[-_. /]?(\d{2})/);
+            if (m1 && m1[2]<=12 && m1[3]<=31) { y=m1[1]; m=m1[2]; d=m1[3]; }
+            else { const m2 = fn.match(/(\d{2})[-_. /]?(\d{2})[-_. /]?(\d{4})/); if (m2 && m2[2]<=12 && m2[1]<=31) { d=m2[1]; m=m2[2]; y=m2[3]; } }
+            if (y && m && d) return 'Actualizado al ' + parseInt(d,10) + ' de ' + months[parseInt(m,10)-1] + ' de ' + y;
+          }
+          return APP.config.fechaActualizacion ? 'Actualizado al ' + APP.config.fechaActualizacion : 'Datos cargados';
+        })()}</strong></p>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
         <span style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)">Filtrar por Vertical</span>
