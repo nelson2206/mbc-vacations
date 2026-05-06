@@ -246,7 +246,7 @@ function renderDashboard() {
             const diffB = gozGabinB - gozRealB;
 
             if (conciliacionConfig.sortCol === 'nombre') { valA = a.nombre; valB = b.nombre; }
-            else if (conciliacionConfig.sortCol === 'vertical') { valA = a.vertical || a.cargo || ''; valB = b.vertical || b.cargo || ''; }
+            else if (conciliacionConfig.sortCol === 'fechaMax') { valA = a.fechaMaxGabin || ''; valB = b.fechaMaxGabin || ''; }
             else if (conciliacionConfig.sortCol === 'saldo') { valA = dispGabinA; valB = dispGabinB; }
             else if (conciliacionConfig.sortCol === 'truncos') { valA = a.diasTruncos || 0; valB = b.diasTruncos || 0; }
             else if (conciliacionConfig.sortCol === 'gozGabin') { valA = gozGabinA; valB = gozGabinB; }
@@ -269,7 +269,7 @@ function renderDashboard() {
             <thead style="position:sticky; top:0; z-index:10; background:var(--bg-panel-alt)">
               <tr>
                 <th style="padding:20px; cursor:pointer" onclick="setConciliacionSort('nombre')">Consultor${getConciliacionSortIcon('nombre')}</th>
-                <th style="cursor:pointer" onclick="setConciliacionSort('vertical')">Vertical${getConciliacionSortIcon('vertical')}</th>
+                <th style="cursor:pointer" onclick="setConciliacionSort('fechaMax')">Fecha Máx. Salida${getConciliacionSortIcon('fechaMax')}</th>
                 <th style="cursor:pointer" onclick="setConciliacionSort('saldo')">Saldo Gabin (Vigente)${getConciliacionSortIcon('saldo')}</th>
                 <th style="cursor:pointer" onclick="setConciliacionSort('truncos')">Días Truncos${getConciliacionSortIcon('truncos')}</th>
                 <th style="cursor:pointer" onclick="setConciliacionSort('gozGabin')">Gozados Gabin (Histórico)${getConciliacionSortIcon('gozGabin')}</th>
@@ -289,7 +289,7 @@ function renderDashboard() {
               const cls = al.nivel === 'critical' ? 'red' : al.nivel === 'warning' ? 'yellow' : 'green';
               return `<tr onclick="verDetalleConsultor('${c.id}')" style="cursor:pointer; height:80px">
                 <td style="padding:15px 20px"><strong>${shortenName(c.nombre)}</strong></td>
-                <td><span style="color:var(--text-muted);font-size:0.85rem">${c.vertical || c.cargo}</span></td>
+                <td><span style="color:var(--text-muted);font-size:0.85rem">${c.fechaMaxGabin || '—'}</span></td>
                 <td><strong style="font-size:1.1rem">${Math.round(dispGabin)}</strong></td>
                 <td><span style="color:var(--text-muted); font-size:1rem">${truncosDisplay}</span></td>
                 <td><span style="color:var(--bg-panel); font-weight:700">${Math.round(gozGabin)}</span></td>
