@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vacaciones Perú — Control de Equipo de Consultoría</title>
+  <meta name="description" content="Herramienta de control de vacaciones para equipos de consultoría en Perú. Cumplimiento normativo DL 713.">
+  <link rel="stylesheet" href="styles.css?v=2">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <!-- MOBILE HEADER -->
+  <header class="mobile-header">
+    <div style="display:flex; align-items:center; gap:10px">
+      <span style="font-size:1.2rem">🏖️</span>
+      <strong style="font-size:1.1rem; letter-spacing:1px">VACAPERU</strong>
+    </div>
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h1><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> VacaPeru</h1>
+      <p>Control de Vacaciones</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">General</div>
+        <button class="nav-item active" data-view="dashboard">
+          <span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg></span> Dashboard
+        </button>
+        <button class="nav-item" data-view="consultores">
+          <span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span> Consultores
+        </button>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Planificación</div>
+        <button class="nav-item" data-view="importar">
+          <span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></span> Importar Excel
+        </button>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Datos</div>
+        <button class="nav-item" data-view="reportes">
+          <span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></span> Reportes
+        </button>
+      </div>
+    </nav>
+    <div style="padding:14px 16px; border-top:1px solid rgba(255,255,255,0.1);">
+      <p class="legal-ref">DL 713 · DL 1405 · DS 002</p>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="mainContent">
+    <!-- Views are rendered dynamically by JS -->
+  </main>
+
+  <!-- MODALS -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modalContainer">
+      <div class="modal-header">
+        <h3 id="modalTitle">Modal</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="data.js?v=2"></script>
+  <script src="views.js?v=2"></script>
+  <script src="app.js?v=2"></script>
+</body>
+</html>

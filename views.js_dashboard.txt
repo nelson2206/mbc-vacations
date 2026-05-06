@@ -1,0 +1,229 @@
+function renderDashboard() {
+  const consFull = getActiveConsultores();
+  const verticals = [...new Set(consFull.map(c => c.vertical).filter(Boolean))].sort();
+  const currentVertical = APP.config.filtroVertical || 'Todos';
+  
+  const cons = currentVertical === 'Todos' ? consFull : consFull.filter(c => c.vertical === currentVertical);
+  
+  const totalDias = cons.reduce((s,c) => s + calcDiasGabin(c), 0);
+  const hoy = new Date().toISOString().slice(0,10);
+  const enVacHoy = APP.solicitudes.filter(s => {
+    const c = getConsultor(s.consultorId);
+    return s.estado==='aprobado' && s.fechaInicio <= hoy && s.fechaFin >= hoy && (currentVertical === 'Todos' || (c && c.vertical === currentVertical));
+  }).length;
+
+  // Classify consultants by risk level
+  const criticos = cons.filter(c => getAlertaLegal(c).nivel === 'critical');
+  const medios = cons.filter(c => getAlertaLegal(c).nivel === 'warning');
+  const sinRiesgo = cons.filter(c => getAlertaLegal(c).nivel === 'ok');
+  
+  const pctCrit = cons.length ? Math.round((criticos.length / cons.length) * 100) : 0;
+  const pctMed = cons.length ? Math.round((medios.length / cons.length) * 100) : 0;
+  const pctOk = cons.length ? Math.round((sinRiesgo.length / cons.length) * 100) : 0;
+
+  function renderRiskCard(c) {
+    const disp = calcDiasGabin(c);
+    const al = getAlertaLegal(c);
+    const cls = al.nivel === 'critical' ? 'crit' : al.nivel === 'warning' ? 'warn' : 'safe';
+    const colors = { crit: '#ef4444', warn: '#f59e0b', safe: '#10b981' };
+    const fechaMax = c.fechaMaxGabin ? `<div style="font-size:0.65rem;margin-top:2px;color:var(--text-muted)">Max Gabin: <strong>${c.fechaMaxGabin}</strong></div>` : '';
+    
+    return `<div class="risk-person-card risk-${cls}" onclick="verDetalleConsultor('${c.id}')" style="cursor:pointer">
+      <div class="risk-avatar" style="background:${colors[cls]}20;color:${colors[cls]}">${getInitials(c.nombre)}</div>
+      <div class="risk-person-info">
+        <div class="risk-person-name">${c.nombre}</div>
+        <div class="risk-person-cargo">${c.vertical || c.cargo}</div>
+        ${fechaMax}
+      </div>
+      <div class="risk-person-days">
+        <span class="risk-days-number">${disp}</span>
+        <span class="risk-days-label">días Gabin</span>
+      </div>
+    </div>`;
+  }
+
+  return `
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h2>📊 Dashboard</h2>
+        <p>Resumen general del equipo — ${new Date().toLocaleDateString('es-PE',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
+      </div>
+      <div class="card" style="padding:8px 16px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:0.8rem;font-weight:600;color:var(--text-secondary)">Vertical:</span>
+        <select class="form-control" style="width:200px;margin:0" onchange="cambiarFiltroVertical(this.value)">
+          <option value="Todos">Todas las Verticales</option>
+          ${verticals.map(v => `<option value="${v}" ${v===currentVertical?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    
+    <div class="stats-grid">
+      <div class="card stat-card accent">
+        <div class="stat-icon">👥</div>
+        <div class="stat-value">${cons.length}</div>
+        <div class="stat-label">Consultores</div>
+      </div>
+      <div class="card stat-card success">
+        <div class="stat-icon">🏖️</div>
+        <div class="stat-value">${enVacHoy}</div>
+        <div class="stat-label">De vacaciones hoy</div>
+      </div>
+      <div class="card stat-card warning">
+        <div class="stat-icon">📋</div>
+        <div class="stat-value">${totalDias}</div>
+        <div class="stat-label">Días pendientes (equipo)</div>
+      </div>
+      <div class="card stat-card danger">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-value">${criticos.length + medios.length}</div>
+        <div class="stat-label">Alertas activas</div>
+      </div>
+    </div>
+
+    <!-- ===== SEMÁFORO DE RIESGO ===== -->
+    <div class="section">
+      <div class="section-title">🚦 Semáforo de Riesgo — Vacaciones por Vencer (DL 713 Art. 23)</div>
+      ${cons.length === 0 ?
+        '<div class="card"><div class="empty-state"><div class="empty-icon">🚦</div><h4>Sin consultores</h4><p>Importa los archivos de RRHH para ver el semáforo</p></div></div>' :
+        `<div class="risk-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+          <!-- CRÍTICO -->
+          <div class="risk-column risk-col-critical">
+            <div class="risk-column-header risk-header-critical">
+              <div class="risk-header-icon">🔴</div>
+              <div class="risk-header-text">
+                <h4>Crítico</h4>
+                <p>Triple vacacional inminente</p>
+              </div>
+              <div class="risk-header-count">
+                <span class="risk-count">${criticos.length}</span>
+                <span class="risk-pct">${pctCrit}%</span>
+              </div>
+            </div>
+            <div class="risk-column-body">
+              ${criticos.length === 0 ?
+                '<div class="risk-empty"><span>✅</span><p>Sin casos críticos</p></div>' :
+                criticos.map(renderRiskCard).join('')}
+            </div>
+          </div>
+
+          <!-- MEDIO -->
+          <div class="risk-column risk-col-warning">
+            <div class="risk-column-header risk-header-warning">
+              <div class="risk-header-icon">🟡</div>
+              <div class="risk-header-text">
+                <h4>Atención</h4>
+                <p>Programar pronto</p>
+              </div>
+              <div class="risk-header-count">
+                <span class="risk-count">${medios.length}</span>
+                <span class="risk-pct">${pctMed}%</span>
+              </div>
+            </div>
+            <div class="risk-column-body">
+              ${medios.length === 0 ?
+                '<div class="risk-empty"><span>👍</span><p>Sin alertas medias</p></div>' :
+                medios.map(renderRiskCard).join('')}
+            </div>
+          </div>
+
+          <!-- SIN RIESGO -->
+          <div class="risk-column risk-col-safe">
+            <div class="risk-column-header risk-header-safe">
+              <div class="risk-header-icon">🟢</div>
+              <div class="risk-header-text">
+                <h4>Sin Riesgo</h4>
+                <p>Al día con vacaciones</p>
+              </div>
+              <div class="risk-header-count">
+                <span class="risk-count">${sinRiesgo.length}</span>
+                <span class="risk-pct">${pctOk}%</span>
+              </div>
+            </div>
+            <div class="risk-column-body">
+              ${sinRiesgo.length === 0 ?
+                '<div class="risk-empty"><span>📋</span><p>Sin consultores al día</p></div>' :
+                sinRiesgo.map(renderRiskCard).join('')}
+            </div>
+          </div>
+        </div>`}
+    </div>
+
+    <!-- ===== VACACIONES NEGRAS ===== -->
+    <div class="section slide-up" style="margin-top:40px">
+      <div class="section-title" style="color:var(--bg-panel); display:flex; align-items:center; gap:10px">
+        <span>🖤 Vacaciones "Negras" (Deuda por no goce registrado en Gabin)</span>
+      </div>
+      <div class="card" style="padding:0; overflow:hidden">
+        <div style="padding:20px; background:rgba(76, 17, 31, 0.05); border-bottom:1px solid rgba(0,0,0,0.05)">
+          <p style="font-size:0.9rem; color:var(--text-on-light); opacity:0.8">Consultores que registraron vacaciones en Gabin pero <strong>realmente trabajaron</strong>. Se les adeuda estos días.</p>
+        </div>
+        <div class="table-container">
+          <table style="width:100%">
+            <thead>
+              <tr>
+                <th style="padding:15px 20px">Consultor</th>
+                <th>Vertical / Equipo</th>
+                <th>Oficial (Gabin)</th>
+                <th>Real (Gestión)</th>
+                <th style="color:var(--accent)">Días "Negros" (Deuda)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${cons.filter(c => calcDiasDisponibles(c) > calcDiasGabin(c)).length === 0 ? 
+                '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-muted)">No se detectaron discrepancias de "Vacaciones Negras"</td></tr>' :
+                cons.filter(c => calcDiasDisponibles(c) > calcDiasGabin(c)).map(c => {
+                  const deuda = Math.round((calcDiasDisponibles(c) - calcDiasGabin(c)) * 100) / 100;
+                  return `<tr onclick="verDetalleConsultor('${c.id}')" style="cursor:pointer">
+                    <td style="padding:15px 20px"><strong>${c.nombre}</strong></td>
+                    <td>${c.vertical || '—'}</td>
+                    <td>${calcDiasGabin(c)}</td>
+                    <td>${calcDiasDisponibles(c)}</td>
+                    <td><span class="status red" style="background:var(--accent); color:white; border-radius:4px; padding:4px 12px">+${deuda} días</span></td>
+                  </tr>`;
+                }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TABLA Y CONCILIACIÓN EXPANDIDA ===== -->
+    <div class="section slide-up" style="margin-top:40px">
+      <div class="section-title">📊 Conciliación Detallada: Gabin vs Real (Vista Expandida)</div>
+      <div class="card" style="padding:0; overflow:hidden">
+        ${cons.length === 0 ? '<div class="empty-state"><div class="empty-icon">👥</div><h4>Sin consultores</h4></div>' :
+          `<div class="table-container" style="max-height: 800px; overflow-y: auto;">
+            <table style="width:100%">
+            <thead style="position:sticky; top:0; z-index:10; background:var(--bg-panel-alt)">
+              <tr>
+                <th style="padding:20px">Nombre del Consultor</th>
+                <th>Vertical / Equipo</th>
+                <th>Saldo Gabin (Oficial)</th>
+                <th>Saldo Real (Gestión)</th>
+                <th>Discrepancia</th>
+                <th>Estado Legal</th>
+              </tr>
+            </thead>
+            <tbody>${cons.map(c => {
+              const dispReal = calcDiasDisponibles(c);
+              const dispGabin = calcDiasGabin(c);
+              const diff = Math.round((dispReal - dispGabin) * 100) / 100;
+              const al = getAlertaLegal(c);
+              const cls = al.nivel === 'critical' ? 'red' : al.nivel === 'warning' ? 'yellow' : 'green';
+              return `<tr onclick="verDetalleConsultor('${c.id}')" style="cursor:pointer; height:75px">
+                <td style="padding:15px 20px"><strong>${c.nombre}</strong></td>
+                <td><span style="color:var(--text-muted);font-size:0.85rem">${c.vertical || c.cargo}</span></td>
+                <td><strong style="font-size:1.15rem">${dispGabin}</strong></td>
+                <td><strong style="font-size:1.15rem; color:var(--bg-panel)">${dispReal}</strong></td>
+                <td>
+                  <span style="font-weight:700; font-size:1.1rem; color:${diff > 0 ? 'var(--accent)' : diff < 0 ? 'var(--danger)' : 'var(--success)'}">
+                    ${diff > 0 ? '+' + diff : diff}
+                  </span>
+                </td>
+                <td><span class="status ${cls}" style="padding:8px 18px; font-size:0.85rem">${al.nivel === 'critical' ? 'Crítico' : al.nivel === 'warning' ? 'Atención' : 'Al día'}</span></td>
+              </tr>`;
+            }).join('')}</tbody></table></div>`}
+      </div>
+    </div>
+  `;
+}
