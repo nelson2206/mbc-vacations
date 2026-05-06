@@ -666,6 +666,13 @@ function processingVerticales(rows, filename) {
 }
 
 function processingReal(rows, filename) {
+  const dateMatch = filename.match(/(\d{2})[./](\d{2})[./](\d{4})/);
+  if (dateMatch) {
+    const [_, d, m, y] = dateMatch;
+    const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+    APP.config.fechaRealActualizacion = `${d} de ${months[parseInt(m)-1]} de ${y}`;
+  }
+
   const headers = rows[0].map(h => String(h||'').toLowerCase().trim());
   const idxID = headers.findIndex(h => h.includes('cod') || h.includes('id'));
   const idxNombre = headers.findIndex(h => (h.includes('nombre') || h.includes('consultor') || h.includes('empleado')) && !h.includes('cod'));
