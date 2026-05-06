@@ -25,9 +25,9 @@ function renderDashboard() {
   
   const totalDias = cons.reduce((s,c) => s + calcDiasGabin(c), 0);
   const hoy = new Date().toISOString().slice(0,10);
-  const enVacHoy = APP.solicitudes.filter(s => {
-    const c = getConsultor(s.consultorId);
-    return s.estado==='aprobado' && s.fechaInicio <= hoy && s.fechaFin >= hoy && (currentVertical === 'Todos' || (c && c.vertical === currentVertical));
+  const enVacHoy = cons.filter(c => {
+    if (!c.realVacations) return false;
+    return c.realVacations.some(v => v.inicio && v.fin && v.inicio <= hoy && v.fin >= hoy);
   }).length;
 
   // Classify consultants by risk level
@@ -209,7 +209,10 @@ function renderDashboard() {
 
     <!-- ===== TABLA DE CONCILIACIÓN EXPANDIDA ===== -->
     <div class="section slide-up" style="margin-top:40px">
-      <div class="section-title">📊 Conciliación Detallada: Gabin vs Real (Vista Expandida)</div>
+      <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <span>📊 Conciliación Detallada: Gabin vs Real (Vista Expandida)</span>
+        <input type="text" id="filterConciliacion" class="form-control" placeholder="🔍 Buscar por nombre..." oninput="filtrarConciliacion()" style="max-width: 300px; padding: 8px 14px; font-size: 0.8rem;">
+      </div>
       <div class="card" style="padding:0; overflow:hidden">
         ${cons.length === 0 ? '<div class="empty-state"><div class="empty-icon">👥</div><h4>Sin consultores</h4></div>' :
           `<div class="table-container" style="max-height: 800px; overflow-y: auto;">
@@ -533,3 +536,24 @@ function verDetalleConsultor(id) {
 
   openModal(`Auditoría de Consultor: ${c.nombre}`, body, `<button class="btn btn-primary" style="padding:12px 30px" onclick="closeModal()">Cerrar Auditoría</button>`, true);
 }
+
+// Global function for filtering the reconciliation table
+window.filtrarConciliacion = function() {
+  const input = document.getElementById('filterConciliacion');
+  if (!input) return;
+  const filter = input.value.toUpperCase();
+  const table = document.querySelector('.table-container table tbody');
+  if (!table) return;
+  const trs = table.getElementsByTagName('tr');
+  for (let i = 0; i < trs.length; i++) {
+    const td = trs[i].getElementsByTagName('td')[0];
+    if (td) {
+      const txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        trs[i].style.display = '';
+      } else {
+        trs[i].style.display = 'none';
+      }
+    }
+  }
+};
