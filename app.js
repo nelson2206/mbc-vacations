@@ -419,17 +419,20 @@ function handleFileUpload(file, type) {
 }
 
 function processingRRHH(rows, filename) {
-  // Extract date from filename (e.g. "Reporte Vacaciones 30.04.2026.xlsx")
-  const dateMatch = filename.match(/(\d{2})[./](\d{2})[./](\d{4})/);
-  if (dateMatch) {
-    const [_, d, m, y] = dateMatch;
-    // Map of months for display
-    const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-    APP.config.fechaActualizacion = `${d} de ${months[parseInt(m)-1]} de ${y}`;
+  // Extract date from filename (e.g. "Reporte 30.04.2026.xlsx", "30-04-2026", "20260430")
+  let y, m, d;
+  const m1 = filename.match(/(\d{4})[-_./]?(\d{2})[-_./]?(\d{2})/);
+  if (m1 && m1[2] <= 12 && m1[3] <= 31) { y = m1[1]; m = m1[2]; d = m1[3]; }
+  else {
+    const m2 = filename.match(/(\d{2})[-_./]?(\d{2})[-_./]?(\d{4})/);
+    if (m2 && m2[2] <= 12 && m2[1] <= 31) { d = m2[1]; m = m2[2]; y = m2[3]; }
+  }
+
+  const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  if (y && m && d) {
+    APP.config.fechaActualizacion = `${parseInt(d, 10)} de ${months[parseInt(m, 10)-1]} de ${y}`;
   } else {
-    // If not found, use a cleaner current date format
     const now = new Date();
-    const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
     APP.config.fechaActualizacion = `${now.getDate()} de ${months[now.getMonth()]} de ${now.getFullYear()}`;
   }
 
@@ -666,11 +669,17 @@ function processingVerticales(rows, filename) {
 }
 
 function processingReal(rows, filename) {
-  const dateMatch = filename.match(/(\d{2})[./](\d{2})[./](\d{4})/);
-  if (dateMatch) {
-    const [_, d, m, y] = dateMatch;
+  let y, m, d;
+  const m1 = filename.match(/(\d{4})[-_./]?(\d{2})[-_./]?(\d{2})/);
+  if (m1 && m1[2] <= 12 && m1[3] <= 31) { y = m1[1]; m = m1[2]; d = m1[3]; }
+  else {
+    const m2 = filename.match(/(\d{2})[-_./]?(\d{2})[-_./]?(\d{4})/);
+    if (m2 && m2[2] <= 12 && m2[1] <= 31) { d = m2[1]; m = m2[2]; y = m2[3]; }
+  }
+
+  if (y && m && d) {
     const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-    APP.config.fechaRealActualizacion = `${d} de ${months[parseInt(m)-1]} de ${y}`;
+    APP.config.fechaRealActualizacion = `${parseInt(d, 10)} de ${months[parseInt(m, 10)-1]} de ${y}`;
   }
 
   const headers = rows[0].map(h => String(h||'').toLowerCase().trim());
