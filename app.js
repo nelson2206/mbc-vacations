@@ -933,6 +933,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Close modal on Escape
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-  // Initial render
-  navigateTo('dashboard');
+  // Esperar a que Firebase cargue los datos por primera vez
+  dataLoadedCallback = () => {
+    navigateTo('dashboard');
+    console.log('Firebase data loaded.');
+  };
 });

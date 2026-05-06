@@ -1,5 +1,18 @@
-// ===== DATA LAYER =====
-const DB_KEY = 'vacaperu_data';
+// ===== FIREBASE CONFIGURATION =====
+// Reemplaza los valores de abajo con tu firebaseConfig real
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_AUTH_DOMAIN",
+  databaseURL: "TU_DATABASE_URL",
+  projectId: "TU_PROJECT_ID",
+  storageBucket: "TU_STORAGE_BUCKET",
+  messagingSenderId: "TU_MESSAGING_SENDER_ID",
+  appId: "TU_APP_ID"
+};
+
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
@@ -15,9 +28,48 @@ const APP_INITIAL = {
   }
 };
 
+let APP = APP_INITIAL;
+let isFirstLoad = true;
+let dataLoadedCallback = null;
+
+// Escuchar cambios en la base de datos (Realtime)
+database.ref('vacaperu_data').on('value', (snapshot) => {
+  const cloudData = snapshot.val();
+  if (cloudData) {
+    APP = cloudData;
+    // Migración interna para asegurar que existan los arrays
+    if (!APP.consultores) APP.consultores = [];
+    if (!APP.solicitudes) APP.solicitudes = [];
+    if (!APP.ventaVacaciones) APP.ventaVacaciones = [];
+    if (!APP.importaciones) APP.importaciones = [];
+    if (!APP.config) APP.config = APP_INITIAL.config;
+  } else {
+    // Si la base está vacía, intentamos cargar de localStorage por si acaso
+    const local = localStorage.getItem(DB_KEY);
+    if (local) {
+      APP = JSON.parse(local);
+      saveData(APP); // Subir local a nube
+    } else {
+      APP = JSON.parse(JSON.stringify(APP_INITIAL));
+      saveData(APP);
+    }
+  }
+  
+  if (isFirstLoad) {
+    isFirstLoad = false;
+    if (dataLoadedCallback) dataLoadedCallback();
+  } else {
+    // Si ya cargó la primera vez y algo cambia, refrescar vista actual
+    if (typeof navigateTo === 'function') navigateTo(currentView);
+  }
+});
+
 function saveData(data) {
+  database.ref('vacaperu_data').set(data);
+  // Opcionalmente mantener local como backup
   localStorage.setItem(DB_KEY, JSON.stringify(data));
 }
+const DB_KEY = 'vacaperu_data';
 
 // ===== CÁLCULOS LEGALES PERÚ =====
 function calcAntiguedad(fechaIngreso) {
@@ -31,28 +83,18 @@ function calcAntiguedad(fechaIngreso) {
     return val;
   };
   const isoStr = toISO(fechaIngreso);
-  // Reemplazar guiones con barras previene el parsing en UTC y fuerza la zona horaria local.
-  // Así evitamos que '2025-06-01' se convierta en 'May 31 19:00:00' en Perú.
   const ing = new Date(isoStr.replace(/-/g, '\/'));
   const hoy = new Date();
-  
   let years = hoy.getFullYear() - ing.getFullYear();
   let months = hoy.getMonth() - ing.getMonth();
-  
-  if (hoy.getDate() < ing.getDate()) {
-    months--;
-  }
-
+  if (hoy.getDate() < ing.getDate()) months--;
   if (months < 0) { years--; months += 12; }
-  
   if (years < 0) { years = 0; months = 0; }
-  
   return { years, months, totalMonths: years * 12 + months };
 }
 
 function calcDiffDias(f1, f2) {
   if (!f1 || !f2) return 0;
-  
   const toISO = (val) => {
     if (typeof val !== 'string') return val;
     const parts = val.split(/[\/-]/);
@@ -61,44 +103,12 @@ function calcDiffDias(f1, f2) {
     }
     return val;
   };
-
   const d1 = new Date(toISO(f1));
   const d2 = new Date(toISO(f2));
   d1.setHours(0,0,0,0); d2.setHours(0,0,0,0);
   const diffTime = Math.abs(d2 - d1);
   return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
 }
-
-function loadData() {
-  const raw = localStorage.getItem(DB_KEY);
-  if (raw) {
-    const data = JSON.parse(raw);
-    if (!data.config) data.config = APP_INITIAL.config;
-    
-    // Migration: Fix inclusive days for realVacations
-    let fixed = false;
-    if (data.consultores) {
-      data.consultores.forEach(c => {
-        if (c.realVacations) {
-          c.realVacations.forEach(v => {
-            if (v.inicio && v.fin) {
-              const correct = calcDiffDias(v.inicio, v.fin);
-              if (v.dias !== correct) {
-                v.dias = correct;
-                fixed = true;
-              }
-            }
-          });
-        }
-      });
-    }
-    if (fixed) localStorage.setItem(DB_KEY, JSON.stringify(data));
-    return data;
-  }
-  return APP_INITIAL;
-}
-
-let APP = loadData();
 
 // ===== CONSULTOR CRUD =====
 function addConsultor(c) {
