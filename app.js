@@ -426,14 +426,18 @@ function processingRRHH(rows, filename) {
   else {
     const m2 = filename.match(/(\d{2})[-_./]?(\d{2})[-_./]?(\d{4})/);
     if (m2 && m2[2] <= 12 && m2[1] <= 31) { d = m2[1]; m = m2[2]; y = m2[3]; }
+    else {
+      const m3 = filename.match(/(\d{2})[-_./]?(\d{2})[-_./]?(\d{2})(?!\d)/);
+      if (m3 && m3[2] <= 12 && m3[1] <= 31) { d = m3[1]; m = m3[2]; y = "20" + m3[3]; }
+    }
   }
 
   const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
   if (y && m && d) {
     APP.config.fechaActualizacion = `${parseInt(d, 10)} de ${months[parseInt(m, 10)-1]} de ${y}`;
   } else {
-    const now = new Date();
-    APP.config.fechaActualizacion = `${now.getDate()} de ${months[now.getMonth()]} de ${now.getFullYear()}`;
+    // FALLBACK: If we still can't parse the date, just show the filename so the user can see it
+    APP.config.fechaActualizacion = `${filename} (Fecha no detectada)`;
   }
 
   // Reporte RRHH (Gabin/Tawa) usually has headers on row 1 or 2
