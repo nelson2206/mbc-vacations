@@ -11,6 +11,7 @@ function navigateTo(view) {
     case 'dashboard': main.innerHTML = renderDashboard(); break;
     case 'consultores': main.innerHTML = renderConsultores(); break;
     case 'importar': main.innerHTML = renderImportar(); break;
+    case 'gestiones': main.innerHTML = renderGestiones(); break;
     case 'reportes': main.innerHTML = renderReportes(); break;
   }
   updateAlertBadge();

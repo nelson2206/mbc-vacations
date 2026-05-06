@@ -16,6 +16,20 @@ function shortenName(fullName) {
   return fullName;
 }
 
+window.conciliacionConfig = { filter: '', sortCol: 'nombre', sortAsc: true };
+
+window.setConciliacionSort = function(col) {
+  if (conciliacionConfig.sortCol === col) conciliacionConfig.sortAsc = !conciliacionConfig.sortAsc;
+  else { conciliacionConfig.sortCol = col; conciliacionConfig.sortAsc = true; }
+  navigateTo('dashboard');
+};
+
+window.setConciliacionFilter = function() {
+  const input = document.getElementById('filterConciliacion');
+  if (input) conciliacionConfig.filter = input.value.toLowerCase();
+  navigateTo('dashboard');
+};
+
 function renderDashboard() {
   const consFull = getActiveConsultores();
   const verticals = [...new Set(consFull.map(c => c.vertical).filter(Boolean))].sort();
@@ -211,25 +225,60 @@ function renderDashboard() {
     <div class="section slide-up" style="margin-top:40px">
       <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
         <span>📊 Conciliación Detallada: Gabin vs Real (Vista Expandida)</span>
-        <input type="text" id="filterConciliacion" class="form-control" placeholder="🔍 Buscar por nombre..." oninput="filtrarConciliacion()" style="max-width: 300px; padding: 8px 14px; font-size: 0.8rem;">
+        <input type="text" id="filterConciliacion" class="form-control" placeholder="🔍 Buscar por nombre..." value="${conciliacionConfig.filter}" onchange="setConciliacionFilter()" style="max-width: 300px; padding: 8px 14px; font-size: 0.8rem;">
       </div>
       <div class="card" style="padding:0; overflow:hidden">
-        ${cons.length === 0 ? '<div class="empty-state"><div class="empty-icon">👥</div><h4>Sin consultores</h4></div>' :
-          `<div class="table-container" style="max-height: 800px; overflow-y: auto;">
+        ${(function(){
+          let conciliacionCons = [...cons];
+          if (conciliacionConfig.filter) {
+            conciliacionCons = conciliacionCons.filter(c => c.nombre.toLowerCase().includes(conciliacionConfig.filter) || (c.vertical && c.vertical.toLowerCase().includes(conciliacionConfig.filter)));
+          }
+
+          conciliacionCons.sort((a, b) => {
+            let valA, valB;
+            const dispGabinA = calcDiasGabin(a);
+            const dispGabinB = calcDiasGabin(b);
+            const gozGabinA = calcDiasGozadosGabin(a);
+            const gozGabinB = calcDiasGozadosGabin(b);
+            const gozRealA = calcDiasGozadosReales(a.id);
+            const gozRealB = calcDiasGozadosReales(b.id);
+            const diffA = gozGabinA - gozRealA;
+            const diffB = gozGabinB - gozRealB;
+
+            if (conciliacionConfig.sortCol === 'nombre') { valA = a.nombre; valB = b.nombre; }
+            else if (conciliacionConfig.sortCol === 'vertical') { valA = a.vertical || a.cargo || ''; valB = b.vertical || b.cargo || ''; }
+            else if (conciliacionConfig.sortCol === 'saldo') { valA = dispGabinA; valB = dispGabinB; }
+            else if (conciliacionConfig.sortCol === 'truncos') { valA = a.diasTruncos || 0; valB = b.diasTruncos || 0; }
+            else if (conciliacionConfig.sortCol === 'gozGabin') { valA = gozGabinA; valB = gozGabinB; }
+            else if (conciliacionConfig.sortCol === 'gozReal') { valA = gozRealA; valB = gozRealB; }
+            else if (conciliacionConfig.sortCol === 'diff') { valA = diffA; valB = diffB; }
+            else if (conciliacionConfig.sortCol === 'estado') { valA = getAlertaLegal(a).nivel; valB = getAlertaLegal(b).nivel; }
+            else { valA = a.nombre; valB = b.nombre; }
+            
+            if (valA < valB) return conciliacionConfig.sortAsc ? -1 : 1;
+            if (valA > valB) return conciliacionConfig.sortAsc ? 1 : -1;
+            return 0;
+          });
+
+          const getConciliacionSortIcon = (col) => conciliacionConfig.sortCol === col ? (conciliacionConfig.sortAsc ? ' 🔼' : ' 🔽') : '';
+
+          if (conciliacionCons.length === 0) return '<div class="empty-state"><div class="empty-icon">👥</div><h4>Sin consultores</h4></div>';
+
+          return `<div class="table-container" style="max-height: 800px; overflow-y: auto;">
             <table style="width:100%">
             <thead style="position:sticky; top:0; z-index:10; background:var(--bg-panel-alt)">
               <tr>
-                <th style="padding:20px">Consultor</th>
-                <th>Vertical</th>
-                <th>Saldo Gabin (Vigente)</th>
-                <th>Días Truncos</th>
-                <th>Gozados Gabin (Histórico)</th>
-                <th>Gozados Real (Gestión)</th>
-                <th>Diferencia (Deuda)</th>
-                <th>Estado Legal</th>
+                <th style="padding:20px; cursor:pointer" onclick="setConciliacionSort('nombre')">Consultor${getConciliacionSortIcon('nombre')}</th>
+                <th style="cursor:pointer" onclick="setConciliacionSort('vertical')">Vertical${getConciliacionSortIcon('vertical')}</th>
+                <th style="cursor:pointer" onclick="setConciliacionSort('saldo')">Saldo Gabin (Vigente)${getConciliacionSortIcon('saldo')}</th>
+                <th style="cursor:pointer" onclick="setConciliacionSort('truncos')">Días Truncos${getConciliacionSortIcon('truncos')}</th>
+                <th style="cursor:pointer" onclick="setConciliacionSort('gozGabin')">Gozados Gabin (Histórico)${getConciliacionSortIcon('gozGabin')}</th>
+                <th style="cursor:pointer" onclick="setConciliacionSort('gozReal')">Gozados Real (Gestión)${getConciliacionSortIcon('gozReal')}</th>
+                <th style="cursor:pointer" onclick="setConciliacionSort('diff')">Diferencia (Deuda)${getConciliacionSortIcon('diff')}</th>
+                <th style="cursor:pointer" onclick="setConciliacionSort('estado')">Estado Legal${getConciliacionSortIcon('estado')}</th>
               </tr>
             </thead>
-            <tbody>${cons.map(c => {
+            <tbody>${conciliacionCons.map(c => {
               const dispGabin = calcDiasGabin(c);
               const gozGabin = calcDiasGozadosGabin(c);
               const gozReal = calcDiasGozadosReales(c.id);
@@ -252,18 +301,57 @@ function renderDashboard() {
                 </td>
                 <td><span class="status ${cls}" style="padding:8px 18px; font-size:0.85rem; min-width:100px; text-align:center">${al.nivel === 'critical' ? 'Crítico' : al.nivel === 'warning' ? 'Atención' : 'Al día'}</span></td>
               </tr>`;
-            }).join('')}</tbody></table></div>`}
+            }).join('')}</tbody></table></div>`;
+        })()}
       </div>
     </div>
   `;
 }
 
+window.consConfig = { filter: '', sortCol: 'nombre', sortAsc: true };
+
+window.setConsSort = function(col) {
+  if (consConfig.sortCol === col) {
+    consConfig.sortAsc = !consConfig.sortAsc;
+  } else {
+    consConfig.sortCol = col;
+    consConfig.sortAsc = true;
+  }
+  navigateTo('consultores');
+};
+
+window.setConsFilter = function() {
+  const input = document.getElementById('filterConsGlobal');
+  if (input) consConfig.filter = input.value.toLowerCase();
+  navigateTo('consultores');
+};
+
 function renderConsultores() {
-  const cons = APP.consultores;
+  let cons = [...APP.consultores];
+  if (consConfig.filter) {
+    cons = cons.filter(c => c.nombre.toLowerCase().includes(consConfig.filter) || (c.cargo && c.cargo.toLowerCase().includes(consConfig.filter)));
+  }
+  
+  cons.sort((a, b) => {
+    let valA, valB;
+    if (consConfig.sortCol === 'nombre') { valA = a.nombre; valB = b.nombre; }
+    else if (consConfig.sortCol === 'vertical') { valA = a.vertical || a.cargo || ''; valB = b.vertical || b.cargo || ''; }
+    else if (consConfig.sortCol === 'ingreso') { valA = a.fechaIngreso || ''; valB = b.fechaIngreso || ''; }
+    else if (consConfig.sortCol === 'diasHR') { valA = a.diasPendientesHR || 0; valB = b.diasPendientesHR || 0; }
+    else if (consConfig.sortCol === 'disp') { valA = calcDiasDisponibles(a); valB = calcDiasDisponibles(b); }
+    else { valA = a.nombre; valB = b.nombre; }
+    
+    if (valA < valB) return consConfig.sortAsc ? -1 : 1;
+    if (valA > valB) return consConfig.sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  const getSortIcon = (col) => consConfig.sortCol === col ? (consConfig.sortAsc ? ' 🔼' : ' 🔽') : '';
   return `
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
       <div><h2><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:middle"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Consultores</h2><p>Gestión del equipo de consultoría</p></div>
-      <div style="display:flex; gap:12px">
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+        <input type="text" id="filterConsGlobal" class="form-control" placeholder="🔍 Buscar consultor..." value="${consConfig.filter}" onchange="setConsFilter()" style="max-width:250px; padding:8px 14px; font-size:0.8rem;">
         <button class="btn btn-outline" onclick="openModalRegistroReal()" style="display:flex; align-items:center; gap:8px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
           Registrar Vacación
@@ -274,9 +362,18 @@ function renderConsultores() {
         </button>
       </div>
     </div>
-    ${cons.length === 0 ? '<div class="card"><div class="empty-state"><div class="empty-icon">👥</div><h4>No hay consultores registrados</h4><p>Agrega consultores manualmente o importa desde un Excel de RRHH</p></div></div>' :
+    ${APP.consultores.length === 0 ? '<div class="card"><div class="empty-state"><div class="empty-icon">👥</div><h4>No hay consultores registrados</h4><p>Agrega consultores manualmente o importa desde un Excel de RRHH</p></div></div>' :
       `<div class="card"><div class="table-container"><table>
-        <thead><tr><th>Nombre</th><th>Vertical</th><th>Ingreso</th><th>Antigüedad</th><th>Días HR</th><th>Disponibles</th><th>Alerta</th><th style="text-align:right">Acciones</th></tr></thead>
+        <thead><tr>
+          <th style="cursor:pointer" onclick="setConsSort('nombre')">Nombre${getSortIcon('nombre')}</th>
+          <th style="cursor:pointer" onclick="setConsSort('vertical')">Vertical${getSortIcon('vertical')}</th>
+          <th style="cursor:pointer" onclick="setConsSort('ingreso')">Ingreso${getSortIcon('ingreso')}</th>
+          <th>Antigüedad</th>
+          <th style="cursor:pointer" onclick="setConsSort('diasHR')">Días HR${getSortIcon('diasHR')}</th>
+          <th style="cursor:pointer" onclick="setConsSort('disp')">Disponibles${getSortIcon('disp')}</th>
+          <th>Alerta</th>
+          <th style="text-align:right">Acciones</th>
+        </tr></thead>
         <tbody>${cons.map(c => {
           const ant = calcAntiguedad(c.fechaIngreso);
           const disp = calcDiasDisponibles(c);
@@ -602,3 +699,94 @@ window.mostrarEnVacacionesHoy = function() {
 
   openModal('🏖️ En Vacaciones Hoy', body, '<button class="btn btn-outline" onclick="closeModal()">Cerrar</button>');
 };
+
+// ----- GESTIONES REALES VIEW -----
+window.gestionesConfig = { sortCol: 'inicio', sortAsc: false };
+
+window.setGestionesSort = function(col) {
+  if (gestionesConfig.sortCol === col) gestionesConfig.sortAsc = !gestionesConfig.sortAsc;
+  else { gestionesConfig.sortCol = col; gestionesConfig.sortAsc = true; }
+  navigateTo('gestiones');
+};
+
+function renderGestiones() {
+  const consFull = getActiveConsultores();
+  const allVacs = [];
+  consFull.forEach(c => {
+    if (c.realVacations) {
+      c.realVacations.forEach((v, idx) => {
+        allVacs.push({ c, v, idx });
+      });
+    }
+  });
+
+  allVacs.sort((a, b) => {
+    let valA, valB;
+    if (gestionesConfig.sortCol === 'inicio') { valA = a.v.inicio; valB = b.v.inicio; }
+    else if (gestionesConfig.sortCol === 'fin') { valA = a.v.fin; valB = b.v.fin; }
+    else if (gestionesConfig.sortCol === 'dias') { valA = a.v.dias; valB = b.v.dias; }
+    else if (gestionesConfig.sortCol === 'nombre') { valA = a.c.nombre; valB = b.c.nombre; }
+    
+    if (valA < valB) return gestionesConfig.sortAsc ? -1 : 1;
+    if (valA > valB) return gestionesConfig.sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  const getSortIcon = (col) => gestionesConfig.sortCol === col ? (gestionesConfig.sortAsc ? ' 🔼' : ' 🔽') : '';
+
+  return `
+    <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start">
+      <div>
+        <h2><span style="font-size:24px; vertical-align:middle; margin-right:8px">⏱️</span>Gestión Real</h2>
+        <p>Listado general de salidas reales efectivas e importadas</p>
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="openModalRegistroReal()" style="display:flex; align-items:center; gap:8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          Registrar Vacación
+        </button>
+      </div>
+    </div>
+    
+    <div class="card">
+      ${allVacs.length === 0 ? '<div class="empty-state"><div class="empty-icon">🏖️</div><h4>No hay salidas registradas</h4><p>Registra vacaciones manualmente o importa un archivo de Gestión Real.</p></div>' :
+      `<div class="table-container" style="max-height:600px; overflow-y:auto">
+        <table style="width:100%">
+          <thead style="position:sticky; top:0; background:white; z-index:10; box-shadow:0 1px 2px rgba(0,0,0,0.05)">
+            <tr>
+              <th style="cursor:pointer" onclick="setGestionesSort('nombre')">Consultor${getSortIcon('nombre')}</th>
+              <th>Vertical</th>
+              <th style="cursor:pointer" onclick="setGestionesSort('inicio')">Inicio${getSortIcon('inicio')}</th>
+              <th style="cursor:pointer" onclick="setGestionesSort('fin')">Fin${getSortIcon('fin')}</th>
+              <th style="cursor:pointer" onclick="setGestionesSort('dias')">Días${getSortIcon('dias')}</th>
+              <th>Origen</th>
+              <th style="text-align:right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${allVacs.map(item => `
+              <tr>
+                <td><strong style="color:var(--bg-panel)">${item.c.nombre}</strong></td>
+                <td><span style="color:var(--text-muted);font-size:0.85rem">${item.c.vertical || item.c.cargo}</span></td>
+                <td><strong>${item.v.inicio}</strong></td>
+                <td><strong>${item.v.fin}</strong></td>
+                <td><span class="status green" style="padding:4px 10px">${item.v.dias} días</span></td>
+                <td><span style="color:var(--text-muted);font-size:0.8rem">${item.v.origen}</span></td>
+                <td style="text-align:right">
+                  <div style="display:flex; gap:8px; justify-content:flex-end">
+                    <button class="btn btn-outline btn-sm" onclick="editarVacacionReal('${item.c.id}', ${item.idx})" title="Editar" style="padding:6px; border-color:transparent; background:rgba(76,17,31,0.05); color:var(--bg-panel)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="eliminarVacacionReal('${item.c.id}', ${item.idx})" title="Eliminar" style="padding:6px; border-color:transparent; background:rgba(220,38,38,0.1); color:#dc2626">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`}
+    </div>
+  `;
+}
