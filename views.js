@@ -94,7 +94,7 @@ function renderDashboard() {
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
       <div>
         <h2>📊 Dashboard</h2>
-        <p>Resumen general del equipo — <strong style="color:var(--bg-panel)">Actualizado al ${APP.config.fechaActualizacion || new Date().toLocaleDateString('es-PE',{year:'numeric',month:'long',day:'numeric'})} (Gabin) ${APP.config.fechaRealActualizacion ? `| ${APP.config.fechaRealActualizacion} (Gestión Real)` : ''}</strong></p>
+        <p>Resumen general del equipo — <strong style="color:var(--bg-panel)">Actualizado al ${APP.config.fechaActualizacion || new Date().toLocaleDateString('es-PE',{year:'numeric',month:'long',day:'numeric'})}</strong></p>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
         <span style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)">Filtrar por Vertical</span>
