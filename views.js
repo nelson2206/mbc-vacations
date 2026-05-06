@@ -77,17 +77,14 @@ function renderDashboard() {
   }
 
   return `
-    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
       <div>
         <h2>📊 Dashboard</h2>
         <p>Resumen general del equipo — ${APP.config.fechaActualizacion || new Date().toLocaleDateString('es-PE',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
       </div>
-      <div class="card" style="padding:8px 16px;display:flex;align-items:center;gap:12px">
-        <span style="font-size:0.8rem;font-weight:600;color:var(--text-on-light);opacity:0.7">Vertical:</span>
-        <select class="form-control" style="width:220px;margin:0" onchange="cambiarFiltroVertical(this.value)">
-          <option value="Todos">Todas las Verticales</option>
-          ${verticals.map(v => `<option value="${v}" ${v===currentVertical?'selected':''}>${v}</option>`).join('')}
-        </select>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <button onclick="cambiarFiltroVertical('Todos')" style="padding:6px 14px;border-radius:20px;border:1.5px solid ${currentVertical==='Todos'?'var(--bg-panel)':'var(--border)'};background:${currentVertical==='Todos'?'var(--bg-panel)':'transparent'};color:${currentVertical==='Todos'?'white':'var(--text-on-light)'};font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s">Todas</button>
+        ${verticals.map(v => `<button onclick="cambiarFiltroVertical('${v}')" style="padding:6px 14px;border-radius:20px;border:1.5px solid ${v===currentVertical?'var(--bg-panel)':'var(--border)'};background:${v===currentVertical?'var(--bg-panel)':'transparent'};color:${v===currentVertical?'white':'var(--text-on-light)'};font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s">${v}</button>`).join('')}
       </div>
     </div>
     
@@ -119,7 +116,7 @@ function renderDashboard() {
       <div class="section-title">🚦 Semáforo de Riesgo — Vacaciones por Vencer (DL 713 Art. 23)</div>
       ${cons.length === 0 ?
         '<div class="card"><div class="empty-state"><div class="empty-icon">🚦</div><h4>Sin consultores</h4><p>Importa los archivos de RRHH para activar el semáforo</p></div></div>' :
-        `<div class="risk-grid">
+        `<div class="risk-grid" style="align-items:start">
           <!-- CRÍTICO -->
           <div class="risk-column risk-col-critical">
             <div class="risk-column-header risk-header-critical">
