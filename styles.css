@@ -748,3 +748,45 @@ select.form-control {
   .toast { min-width: 0; width: calc(100vw - 32px); }
   .toast-container { right: 16px; left: 16px; }
 }
+
+/* ===== iOS SAFARI & IPHONE 16 PRO SPECIFIC FIXES ===== */
+@supports (-webkit-touch-callout: none) {
+  /* Fix for 100vh issue on mobile Safari */
+  .sidebar, body {
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Ensure inputs don't zoom on focus */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Safe area support for iPhone with notch/dynamic island */
+.mobile-header {
+  padding-top: calc(14px + env(safe-area-inset-top));
+}
+
+.sidebar-brand {
+  padding-top: calc(28px + env(safe-area-inset-top));
+}
+
+.main-content {
+  padding-bottom: calc(36px + env(safe-area-inset-bottom));
+}
+
+/* Improve tap targets for mobile */
+.nav-item, .btn, .risk-person-card, tr {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent accidental text selection during navigation */
+.sidebar-nav, .mobile-header {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Better table scrolling on iOS */
+.table-container {
+  -webkit-overflow-scrolling: touch;
+}
