@@ -1,13 +1,13 @@
 // ===== FIREBASE CONFIGURATION =====
 // Reemplaza los valores de abajo con tu firebaseConfig real
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_AUTH_DOMAIN",
-  databaseURL: "TU_DATABASE_URL",
-  projectId: "TU_PROJECT_ID",
-  storageBucket: "TU_STORAGE_BUCKET",
-  messagingSenderId: "TU_MESSAGING_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyDReBul-ERlycVnC12_WRsL2jbPFdnNUG0",
+  authDomain: "mbc-vacations.firebaseapp.com",
+  databaseURL: "https://mbc-vacations-default-rtdb.firebaseio.com",
+  projectId: "mbc-vacations",
+  storageBucket: "mbc-vacations.firebasestorage.app",
+  messagingSenderId: "191163768219",
+  appId: "1:191163768219:web:edf77a7805d04915dd153e"
 };
 
 // Inicializar Firebase
