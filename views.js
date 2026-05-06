@@ -77,14 +77,42 @@ function renderDashboard() {
   }
 
   return `
-    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
       <div>
         <h2>📊 Dashboard</h2>
         <p>Resumen general del equipo — ${APP.config.fechaActualizacion || new Date().toLocaleDateString('es-PE',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-        <button onclick="cambiarFiltroVertical('Todos')" style="padding:6px 14px;border-radius:20px;border:1.5px solid ${currentVertical==='Todos'?'var(--bg-panel)':'var(--border)'};background:${currentVertical==='Todos'?'var(--bg-panel)':'transparent'};color:${currentVertical==='Todos'?'white':'var(--text-on-light)'};font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s">Todas</button>
-        ${verticals.map(v => `<button onclick="cambiarFiltroVertical('${v}')" style="padding:6px 14px;border-radius:20px;border:1.5px solid ${v===currentVertical?'var(--bg-panel)':'var(--border)'};background:${v===currentVertical?'var(--bg-panel)':'transparent'};color:${v===currentVertical?'white':'var(--text-on-light)'};font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s">${v}</button>`).join('')}
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <span style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)">Filtrar por Vertical</span>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end">
+          ${['Todos', ...verticals].map(v => {
+            const isActive = (v === 'Todos' && currentVertical === 'Todos') || v === currentVertical;
+            return `<button 
+              onclick="cambiarFiltroVertical('${v}')" 
+              style="
+                padding: 7px 16px;
+                border-radius: 8px;
+                border: 1.5px solid ${isActive ? 'var(--bg-panel)' : 'rgba(76,17,31,0.15)'};
+                background: ${isActive ? 'var(--bg-panel)' : 'white'};
+                color: ${isActive ? 'white' : 'var(--text-on-light)'};
+                font-size: 0.78rem;
+                font-weight: ${isActive ? '700' : '500'};
+                cursor: pointer;
+                transition: all 0.18s ease;
+                box-shadow: ${isActive ? '0 3px 10px rgba(76,17,31,0.25)' : '0 1px 3px rgba(0,0,0,0.06)'};
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                white-space: nowrap;
+              "
+              onmouseover="if(!${isActive})this.style.borderColor='var(--bg-panel)';this.style.background=!${isActive}?'rgba(76,17,31,0.05)':this.style.background"
+              onmouseout="if(!${isActive}){this.style.borderColor='rgba(76,17,31,0.15)';this.style.background='white'}"
+            >
+              ${isActive ? '<span style="width:6px;height:6px;border-radius:50%;background:white;display:inline-block;flex-shrink:0"></span>' : ''}
+              ${v === 'Todos' ? 'Todas las verticales' : v}
+            </button>`;
+          }).join('')}
+        </div>
       </div>
     </div>
     
