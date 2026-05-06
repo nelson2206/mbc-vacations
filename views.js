@@ -122,7 +122,7 @@ function renderDashboard() {
         <div class="stat-value">${cons.length}</div>
         <div class="stat-label">Consultores</div>
       </div>
-      <div class="card stat-card success">
+      <div class="card stat-card success" onclick="mostrarEnVacacionesHoy()" style="cursor: pointer;" title="Ver lista de consultores en vacaciones hoy">
         <div class="stat-icon">🏖️</div>
         <div class="stat-value">${enVacHoy}</div>
         <div class="stat-label">En vacaciones hoy</div>
@@ -477,6 +477,11 @@ function verDetalleConsultor(id) {
           <div><span style="color:var(--text-muted);font-size:0.8rem;font-weight:600">Vertical / Equipo</span><br><strong>${c.vertical || 'Sin asignar'}</strong></div>
           <div><span style="color:var(--text-muted);font-size:0.8rem;font-weight:600">Cargo Actual</span><br><strong>${c.cargo}</strong></div>
         </div>
+        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;margin-top:20px;padding-top:15px;border-top:1px solid rgba(0,0,0,0.05)">
+          <div><span style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase">Pendientes (Gabin)</span><br><strong style="font-size:1.2rem;color:var(--bg-panel)">${c.diasPendientesHR || 0}</strong></div>
+          <div><span style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase">Truncos (Gabin)</span><br><strong style="font-size:1.2rem;color:var(--bg-panel)">${c.diasTruncos || 0}</strong></div>
+          <div><span style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase">Fecha Max (Gabin)</span><br><strong style="font-size:1.1rem;color:var(--accent)">${c.fechaMaxGabin || '—'}</strong></div>
+        </div>
       </div>
       
       <div class="card" style="padding:25px;background:white;border:2px solid var(--bg-panel-alt)">
@@ -556,4 +561,44 @@ window.filtrarConciliacion = function() {
       }
     }
   }
+};
+
+// Global function to show consultants on vacation today
+window.mostrarEnVacacionesHoy = function() {
+  const hoy = new Date().toISOString().slice(0,10);
+  const consFull = getActiveConsultores();
+  const currentVertical = APP.config.filtroVertical || 'Todos';
+  const cons = currentVertical === 'Todos' ? consFull : consFull.filter(c => c.vertical === currentVertical);
+  
+  const vacsHoy = [];
+  cons.forEach(c => {
+    if (c.realVacations) {
+      c.realVacations.forEach(v => {
+        if (v.inicio && v.fin && v.inicio <= hoy && v.fin >= hoy) {
+          vacsHoy.push({ c, v });
+        }
+      });
+    }
+  });
+
+  const body = vacsHoy.length === 0 ? 
+    '<div class="empty-state"><div class="empty-icon">🏖️</div><h4>Nadie de vacaciones</h4><p>No hay consultores de vacaciones el día de hoy.</p></div>' :
+    `<div class="table-container">
+      <table style="width:100%">
+        <thead style="background:var(--bg-panel-alt)"><tr><th style="padding:15px">Consultor</th><th>Vertical</th><th>Inicio</th><th>Fin</th><th>Días</th></tr></thead>
+        <tbody>
+          ${vacsHoy.map(item => `
+            <tr>
+              <td style="padding:15px"><strong>${item.c.nombre}</strong></td>
+              <td><span style="color:var(--text-muted);font-size:0.85rem">${item.c.vertical || '—'}</span></td>
+              <td><strong>${item.v.inicio}</strong></td>
+              <td><strong>${item.v.fin}</strong></td>
+              <td><span class="status green" style="padding:4px 10px">${item.v.dias} días</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+  openModal('🏖️ En Vacaciones Hoy', body, '<button class="btn btn-outline" onclick="closeModal()">Cerrar</button>');
 };
