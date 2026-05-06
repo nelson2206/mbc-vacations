@@ -14,14 +14,29 @@ function navigateTo(view) {
     case 'gestiones': main.innerHTML = renderGestiones(); break;
     case 'reportes': main.innerHTML = renderReportes(); break;
   }
+  main.scrollTop = 0;
+  window.scrollTo(0, 0);
   updateAlertBadge();
-  if (window.innerWidth <= 900) {
-    document.getElementById('sidebar').classList.remove('active');
-  }
+  closeSidebarOnMobile();
 }
 
 function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('active');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  sidebar.classList.toggle('active');
+  if (overlay) overlay.classList.toggle('active');
+  // Prevent body scroll when sidebar is open on mobile
+  document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+}
+
+function closeSidebarOnMobile() {
+  if (window.innerWidth <= 768) {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar) sidebar.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  }
 }
 
 function cambiarFiltroVertical(val) {
