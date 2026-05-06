@@ -109,7 +109,7 @@ function renderDashboard() {
               onmouseout="if(!${isActive}){this.style.borderColor='rgba(76,17,31,0.15)';this.style.background='white'}"
             >
               ${isActive ? '<span style="width:6px;height:6px;border-radius:50%;background:white;display:inline-block;flex-shrink:0"></span>' : ''}
-              ${v === 'Todos' ? 'Todas las verticales' : v}
+              ${v === 'Todos' ? 'Todas las verticales' : v.replace(/Consultor[ií]a\s*/gi, '').trim() || v}
             </button>`;
           }).join('')}
         </div>
