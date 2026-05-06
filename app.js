@@ -130,12 +130,13 @@ function openModalRegistroReal() {
   if (cons.length === 0) { showToast('Primero agrega consultores', 'error'); return; }
   
   const sortedCons = [...cons].sort((a,b) => a.nombre.localeCompare(b.nombre));
-  const opts = sortedCons.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+  const opts = sortedCons.map(c => `<option value="${c.nombre}"></option>`).join('');
   
   const body = `
     <div class="form-group">
       <label>Consultor</label>
-      <select class="form-control" id="fRealConsultor">${opts}</select>
+      <input list="consultores-list" class="form-control" id="fRealConsultorInput" placeholder="Escribe el nombre del consultor..." autocomplete="off">
+      <datalist id="consultores-list">${opts}</datalist>
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -176,11 +177,14 @@ function updateDiasPreview(idInicio, idFin, idPreview) {
 }
 
 function guardarRegistroReal() {
-  const cid = document.getElementById('fRealConsultor').value;
+  const inputVal = document.getElementById('fRealConsultorInput').value;
+  const cMatch = APP.consultores.find(x => x.nombre === inputVal);
+  const cid = cMatch ? cMatch.id : null;
+
   const fInicio = document.getElementById('fRealInicio').value;
   const fFin = document.getElementById('fRealFin').value;
   
-  if (!cid || !fInicio || !fFin) { showToast('Completa todos los campos', 'error'); return; }
+  if (!cid || !fInicio || !fFin) { showToast('Selecciona un consultor válido de la lista y completa las fechas', 'error'); return; }
   if (new Date(fFin) < new Date(fInicio)) { showToast('La fecha final no puede ser antes de la inicial', 'error'); return; }
   
   const c = getConsultor(cid);
