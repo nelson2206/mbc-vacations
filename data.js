@@ -1,4 +1,5 @@
 // ===== FIREBASE CONFIGURATION =====
+const DB_KEY = 'vacaperu_data';
 // Reemplaza los valores de abajo con tu firebaseConfig real
 const firebaseConfig = {
   apiKey: "AIzaSyDReBul-ERlycVnC12_WRsL2jbPFdnNUG0",
@@ -62,6 +63,15 @@ database.ref('vacaperu_data').on('value', (snapshot) => {
     // Si ya cargó la primera vez y algo cambia, refrescar vista actual
     if (typeof navigateTo === 'function') navigateTo(currentView);
   }
+}, (error) => {
+  console.error("Firebase Error:", error);
+  // Fallback a local si falla Firebase
+  const local = localStorage.getItem(DB_KEY);
+  if (local) APP = JSON.parse(local);
+  if (isFirstLoad) {
+    isFirstLoad = false;
+    if (dataLoadedCallback) dataLoadedCallback();
+  }
 });
 
 function saveData(data) {
@@ -69,7 +79,7 @@ function saveData(data) {
   // Opcionalmente mantener local como backup
   localStorage.setItem(DB_KEY, JSON.stringify(data));
 }
-const DB_KEY = 'vacaperu_data';
+
 
 // ===== CÁLCULOS LEGALES PERÚ =====
 function calcAntiguedad(fechaIngreso) {

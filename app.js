@@ -938,4 +938,13 @@ document.addEventListener('DOMContentLoaded', () => {
     navigateTo('dashboard');
     console.log('Firebase data loaded.');
   };
+
+  // Timeout de seguridad: Si en 4 segundos no hay respuesta de Firebase, cargar lo que haya localmente
+  setTimeout(() => {
+    if (isFirstLoad) {
+      console.warn('Firebase timeout. Loading fallback data.');
+      isFirstLoad = false;
+      navigateTo('dashboard');
+    }
+  }, 4000);
 });
