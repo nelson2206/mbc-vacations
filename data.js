@@ -207,8 +207,8 @@ function addVenta(v) {
 
 function calcTotalHistorico(consultor) {
   const ant = calcAntiguedad(consultor.fechaIngreso);
-  // Based on audit logic: Each completed year (30 days) + current year's bucket (30 days)
-  return (ant.years + 1) * 30;
+  // Según ley: 30 días por cada año completo de servicios
+  return ant.years * 30;
 }
 
 function calcDiasGozadosGabin(c) {
