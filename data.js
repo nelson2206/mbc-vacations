@@ -262,7 +262,16 @@ function calcDiasGozadosDesdeMesHR(consultor) {
 
 function getAlertaLegal(consultor) {
   const disponibles = calcDiasGabin(consultor);
+  
+  // Lógica Senior: Alerta por ACUMULACIÓN (Independiente de la fecha)
+  if (disponibles >= 60) {
+    return { nivel: 'critical', msg: `CRÍTICO: Acumulación excesiva (${Math.round(disponibles)} días). Riesgo de indemnización triple.` };
+  }
+  
   if (!consultor.fechaMaxGabin || disponibles <= 0) {
+    if (disponibles > 30) {
+      return { nivel: 'warning', msg: `ATENCIÓN: Saldo elevado (${Math.round(disponibles)} días) sin fecha de caducidad registrada.` };
+    }
     return { nivel: 'ok', msg: `Sin urgencia (${disponibles} días pendientes)` };
   }
   
@@ -272,14 +281,19 @@ function getAlertaLegal(consultor) {
   const diffMonths = diffTime / (1000 * 60 * 60 * 24 * 30.416);
   const mesesAprox = Math.max(0, Math.ceil(diffMonths));
 
-  // Crítico: <=3 meses con días OR >3 a <=6 meses con >14 días
+  // Crítico por CADUCIDAD: <=3 meses con días OR >3 a <=6 meses con >14 días
   if ((diffMonths <= 3 && disponibles > 0) || (diffMonths > 3 && diffMonths <= 6 && disponibles > 14)) {
-    return { nivel: 'critical', msg: `CRÍTICO: ${Math.round(disponibles)} días por tomar en ${mesesAprox} meses.` };
+    return { nivel: 'critical', msg: `CRÍTICO: ${Math.round(disponibles)} días por caducar en ${mesesAprox} meses.` };
   }
   
-  // Medio: >3 a <=6 meses con días (implícito <=14) OR >6 a <=9 meses con >=15 días
+  // Medio por CADUCIDAD: >3 a <=6 meses con días (implícito <=14) OR >6 a <=9 meses con >=15 días
   if ((diffMonths > 3 && diffMonths <= 6 && disponibles > 0) || (diffMonths > 6 && diffMonths <= 9 && disponibles >= 15)) {
-    return { nivel: 'warning', msg: `ATENCIÓN: ${Math.round(disponibles)} días por tomar en ${mesesAprox} meses.` };
+    return { nivel: 'warning', msg: `ATENCIÓN: ${Math.round(disponibles)} días por caducar en ${mesesAprox} meses.` };
+  }
+  
+  // Si tiene saldo pero la caducidad es lejana
+  if (disponibles > 30) {
+    return { nivel: 'warning', msg: `ATENCIÓN: Saldo elevado (${Math.round(disponibles)} días).` };
   }
   
   return { nivel: 'ok', msg: `Sin riesgo inmediato. Límite en ${mesesAprox} meses.` };

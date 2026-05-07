@@ -550,7 +550,15 @@ function processingRRHH(rows, filename) {
       }
     }
 
-    let existing = APP.consultores.find(c => c.idGabin === id || c.nombre.toLowerCase() === nombre.toLowerCase());
+    let existing = APP.consultores.find(c => {
+      if (id && c.idGabin === id) return true;
+      const n1 = c.nombre.toLowerCase().trim().replace(/,/g, '');
+      const n2 = nombre.toLowerCase().trim().replace(/,/g, '');
+      // Match regardless of order (e.g. "Surnames Name" vs "Name Surnames")
+      const w1 = n1.split(/\s+/).sort().join(' ');
+      const w2 = n2.split(/\s+/).sort().join(' ');
+      return w1 === w2;
+    });
 
     if (existing) {
       existing.idGabin = id;

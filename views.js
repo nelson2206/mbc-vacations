@@ -808,4 +808,81 @@ function renderGestiones() {
       </div>`}
     </div>
   `;
+};
+
+function renderAuditoria() {
+  const cons = getActiveConsultores();
+  const outliers = [];
+  
+  cons.forEach(c => {
+    const ant = calcAntiguedad(c.fechaIngreso);
+    const disp = calcDiasGabin(c);
+    const real = calcDiasGozadosReales(c.id);
+    const hist = calcDiasGozadosGabin(c);
+    const diff = Math.abs(real - hist);
+    const issues = [];
+    
+    // 1. Error de Conciliación de Nombres (No hay datos de Gabin)
+    if (!c.diasPendientesHR && ant.years > 0) {
+      issues.push({ type: 'danger', msg: 'Sin vinculación con Gabin (Posible error de nombre)' });
+    }
+    
+    // 2. Discrepancia Crítica (Real vs Gabin)
+    if (diff > 15) {
+      issues.push({ type: 'warning', msg: `Discrepancia alta: Real (${real}) vs Gabin (${hist}). Dif: ${diff} días.` });
+    }
+    
+    // 3. Saldo Negativo
+    if (calcDiasDisponibles(c) < 0) {
+      issues.push({ type: 'danger', msg: 'Saldo negativo: Ha gozado más de lo que le corresponde legalmente.' });
+    }
+    
+    // 4. Acumulación Excesiva
+    if (disp >= 30) {
+      issues.push({ type: 'info', msg: `Alerta de Acumulación: ${disp} días pendientes.` });
+    }
+
+    if (issues.length > 0) {
+      outliers.push({ c, issues });
+    }
+  });
+
+  return `
+    <div class="page-header">
+      <h2>🔍 Auditoría Senior QA</h2>
+      <p>Detección automática de inconsistencias y riesgos de compensación.</p>
+    </div>
+    
+    <div class="card" style="padding:0">
+      <div class="table-container">
+        <table style="width:100%">
+          <thead style="background:var(--bg-panel-alt)">
+            <tr>
+              <th style="padding:15px">Consultor</th>
+              <th>Hallazgos de Auditoría</th>
+              <th style="text-align:right; padding-right:15px">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${outliers.length === 0 ? '<tr><td colspan="3" style="padding:40px; text-align:center">✅ No se detectaron inconsistencias críticas.</td></tr>' : 
+              outliers.map(o => `
+              <tr>
+                <td style="padding:15px">
+                  <strong>${o.c.nombre}</strong><br>
+                  <span style="font-size:0.75rem; color:var(--text-muted)">Ingreso: ${o.c.fechaIngreso}</span>
+                </td>
+                <td>
+                  ${o.issues.map(i => `<div style="margin-bottom:4px"><span class="status ${i.type === 'danger' ? 'red' : (i.type === 'warning' ? 'orange' : 'blue')}" style="padding:2px 8px; font-size:0.7rem">${i.msg}</span></div>`).join('')}
+                </td>
+                <td style="text-align:right; padding-right:15px">
+                  <button class="btn secondary sm" onclick="verDetalleConsultor('${o.c.id}')">Revisar</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
 }
