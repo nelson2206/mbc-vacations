@@ -31,10 +31,12 @@ const APP_INITIAL = {
 
 let APP = APP_INITIAL;
 let isFirstLoad = true;
+let isCloudConnected = false; // Nueva bandera de estado
 let dataLoadedCallback = null;
 
 // Escuchar cambios en la base de datos (Realtime)
 database.ref('vacaperu_data').on('value', (snapshot) => {
+  isCloudConnected = true; // Si llega un valor, estamos conectados
   const cloudData = snapshot.val();
   if (cloudData) {
     APP = cloudData;
@@ -68,6 +70,16 @@ database.ref('vacaperu_data').on('value', (snapshot) => {
   // Fallback a local si falla Firebase
   const local = localStorage.getItem(DB_KEY);
   if (local) APP = JSON.parse(local);
+  
+  // Mostrar error en la UI si existe showToast
+  if (typeof showToast === 'function') {
+    if (error.message.includes('permission_denied')) {
+      showToast('Error de Nube: Acceso denegado. Revisa las reglas de seguridad en Firebase.', 'error');
+    } else {
+      showToast('Error de Nube: No se pudo conectar. Verifica la URL de la base de datos.', 'error');
+    }
+  }
+
   if (isFirstLoad) {
     isFirstLoad = false;
     if (dataLoadedCallback) dataLoadedCallback();
@@ -75,8 +87,19 @@ database.ref('vacaperu_data').on('value', (snapshot) => {
 });
 
 function saveData(data) {
-  database.ref('vacaperu_data').set(data);
-  // Opcionalmente mantener local como backup
+  // Solo intentamos guardar en nube si la base de datos está inicializada correctamente
+  try {
+    database.ref('vacaperu_data').set(data).catch(err => {
+      console.error("Error al guardar en nube:", err);
+      if (typeof showToast === 'function' && err.message.includes('permission_denied')) {
+        showToast('Error: No tienes permiso para guardar datos en la nube.', 'error');
+      }
+    });
+  } catch(e) {
+    console.error("Database ref failed:", e);
+  }
+  
+  // Siempre mantenemos el local como respaldo crítico
   localStorage.setItem(DB_KEY, JSON.stringify(data));
 }
 

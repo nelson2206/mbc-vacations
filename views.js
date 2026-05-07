@@ -108,6 +108,9 @@ function renderDashboard() {
           return APP.config.fechaActualizacion ? 'Actualizado al ' + APP.config.fechaActualizacion : 'Datos cargados';
         })()}</strong></p>
       </div>
+      <div class="status-badge ${isCloudConnected ? 'online' : 'offline'}">
+        ${isCloudConnected ? '● Sincronizado' : '○ Modo Local'}
+      </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
         <span style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)">Filtrar por Vertical</span>
         <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end">
