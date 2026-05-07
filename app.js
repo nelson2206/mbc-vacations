@@ -572,9 +572,10 @@ function processingRRHH(rows, filename) {
   const removed = initialCount - APP.consultores.length;
 
   // Snapshot for history
+  const sanitizeKey = (k) => k.replace(/[.#$\[\]\/]/g, '_');
   const snapshot = dataRows.map(row => {
     const obj = {};
-    headers.forEach((h, i) => { if(h) obj[h] = row[i]; });
+    headers.forEach((h, i) => { if(h) obj[sanitizeKey(h)] = row[i]; });
     return { _raw: obj };
   });
 
@@ -661,9 +662,10 @@ function processingVerticales(rows, filename) {
   });
 
   // Snapshot for history
+  const sanitizeKey = (k) => String(k).replace(/[.#$\[\]\/]/g, '_');
   const snapshot = rows.slice(headerRowIndex + 1).map(row => {
     const obj = {};
-    rows[headerRowIndex].forEach((h, i) => { if(h) obj[h] = row[i]; });
+    rows[headerRowIndex].forEach((h, i) => { if(h) obj[sanitizeKey(h)] = row[i]; });
     return { _raw: obj };
   });
 
@@ -775,9 +777,10 @@ function processingReal(rows, filename) {
   const updated = updatedConsultores.size;
 
   // Snapshot for history
+  const sanitizeKey = (k) => String(k).replace(/[.#$\[\]\/]/g, '_');
   const snapshot = rows.slice(1).map(row => {
     const obj = {};
-    rows[0].forEach((h, i) => { if(h) obj[h] = row[i]; });
+    rows[0].forEach((h, i) => { if(h) obj[sanitizeKey(h)] = row[i]; });
     return { _raw: obj };
   });
 
