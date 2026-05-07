@@ -25,7 +25,7 @@ const APP_INITIAL = {
   config: {
     empresa: "Indra / Minsait",
     normativa: "DL 713 & DL 1405",
-    filtroVertical: "Todos"
+    filtroVertical: ["Todos"]
   }
 };
 
@@ -46,6 +46,10 @@ database.ref('vacaperu_data').on('value', (snapshot) => {
     if (!APP.ventaVacaciones) APP.ventaVacaciones = [];
     if (!APP.importaciones) APP.importaciones = [];
     if (!APP.config) APP.config = APP_INITIAL.config;
+    // Migración: Convertir filtroVertical de string a array si es necesario
+    if (typeof APP.config.filtroVertical === 'string') {
+      APP.config.filtroVertical = [APP.config.filtroVertical];
+    }
   } else {
     // Si la base está vacía, intentamos cargar de localStorage por si acaso
     const local = localStorage.getItem(DB_KEY);

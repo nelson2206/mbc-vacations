@@ -40,7 +40,30 @@ function closeSidebarOnMobile() {
 }
 
 function cambiarFiltroVertical(val) {
-  APP.config.filtroVertical = val;
+  if (!Array.isArray(APP.config.filtroVertical)) {
+    APP.config.filtroVertical = [APP.config.filtroVertical || 'Todos'];
+  }
+
+  if (val === 'Todos') {
+    APP.config.filtroVertical = ['Todos'];
+  } else {
+    // Si estaba "Todos", lo quitamos para poner la específica
+    const idxTodos = APP.config.filtroVertical.indexOf('Todos');
+    if (idxTodos > -1) APP.config.filtroVertical.splice(idxTodos, 1);
+
+    const idx = APP.config.filtroVertical.indexOf(val);
+    if (idx > -1) {
+      APP.config.filtroVertical.splice(idx, 1);
+    } else {
+      APP.config.filtroVertical.push(val);
+    }
+
+    // Si nos quedamos vacíos, volvemos a "Todos"
+    if (APP.config.filtroVertical.length === 0) {
+      APP.config.filtroVertical = ['Todos'];
+    }
+  }
+
   saveData(APP);
   navigateTo('dashboard');
 }

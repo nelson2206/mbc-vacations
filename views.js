@@ -33,9 +33,11 @@ window.setConciliacionFilter = function() {
 function renderDashboard() {
   const consFull = getActiveConsultores();
   const verticals = [...new Set(consFull.map(c => c.vertical).filter(Boolean))].sort();
-  const currentVertical = APP.config.filtroVertical || 'Todos';
+  const currentVerticals = Array.isArray(APP.config.filtroVertical) ? APP.config.filtroVertical : ['Todos'];
   
-  const cons = currentVertical === 'Todos' ? consFull : consFull.filter(c => c.vertical === currentVertical);
+  const cons = currentVerticals.includes('Todos') 
+    ? consFull 
+    : consFull.filter(c => currentVerticals.includes(c.vertical));
   
   const totalDias = cons.reduce((s,c) => s + calcDiasGabin(c), 0);
   const hoy = new Date().toISOString().slice(0,10);
@@ -115,7 +117,7 @@ function renderDashboard() {
         <span style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)">Filtrar por Vertical</span>
         <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end">
           ${['Todos', ...verticals].map(v => {
-            const isActive = (v === 'Todos' && currentVertical === 'Todos') || v === currentVertical;
+            const isActive = currentVerticals.includes(v);
             return `<button 
               onclick="cambiarFiltroVertical('${v}')" 
               style="
@@ -679,8 +681,10 @@ window.filtrarConciliacion = function() {
 window.mostrarEnVacacionesHoy = function() {
   const hoy = new Date().toISOString().slice(0,10);
   const consFull = getActiveConsultores();
-  const currentVertical = APP.config.filtroVertical || 'Todos';
-  const cons = currentVertical === 'Todos' ? consFull : consFull.filter(c => c.vertical === currentVertical);
+  const currentVerticals = Array.isArray(APP.config.filtroVertical) ? APP.config.filtroVertical : ['Todos'];
+  const cons = currentVerticals.includes('Todos') 
+    ? consFull 
+    : consFull.filter(c => currentVerticals.includes(c.vertical));
   
   const vacsHoy = [];
   cons.forEach(c => {
