@@ -808,7 +808,7 @@ function renderGestiones() {
       </div>`}
     </div>
   `;
-};
+}
 
 function renderAuditoria() {
   const cons = getActiveConsultores();
@@ -884,5 +884,4 @@ function renderAuditoria() {
       </div>
     </div>
   `;
-}
 }
