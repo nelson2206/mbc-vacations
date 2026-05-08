@@ -377,7 +377,7 @@ function renderConsultores() {
   const getSortIcon = (col) => consConfig.sortCol === col ? (consConfig.sortAsc ? ' 🔼' : ' 🔽') : '';
   return `
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
-      <div><h2><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:middle"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Consultores</h2><p>Gestión del equipo de consultoría</p></div>
+      <div><h2><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:middle"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Base de Consultores</h2><p>Gestión del equipo de consultoría</p></div>
       <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
         <input type="text" id="filterConsGlobal" class="form-control" placeholder="🔍 Buscar consultor..." value="${consConfig.filter}" onchange="setConsFilter()" style="max-width:250px; padding:8px 14px; font-size:0.8rem;">
         <button class="btn btn-outline" onclick="openModalRegistroReal()" style="display:flex; align-items:center; gap:8px">
