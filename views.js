@@ -33,12 +33,12 @@ window.setConciliacionFilter = function() {
 function renderDashboard() {
   const consFull = getActiveConsultores();
   const verticals = [...new Set(consFull.map(c => c.vertical).filter(Boolean))].sort();
-  const currentVerticals = Array.isArray(APP.config.filtroVertical) ? APP.config.filtroVertical : ['Todos'];
-  
-  const cons = currentVerticals.includes('Todos') 
-    ? consFull 
+  const currentVerticals = getFiltroVertical();
+
+  const cons = currentVerticals.includes('Todos')
+    ? consFull
     : consFull.filter(c => currentVerticals.includes(c.vertical));
-  
+
   const totalDias = cons.reduce((s,c) => s + calcDiasGabin(c), 0);
   const hoy = new Date().toISOString().slice(0,10);
   const enVacHoy = cons.filter(c => {
@@ -681,11 +681,11 @@ window.filtrarConciliacion = function() {
 window.mostrarEnVacacionesHoy = function() {
   const hoy = new Date().toISOString().slice(0,10);
   const consFull = getActiveConsultores();
-  const currentVerticals = Array.isArray(APP.config.filtroVertical) ? APP.config.filtroVertical : ['Todos'];
-  const cons = currentVerticals.includes('Todos') 
-    ? consFull 
+  const currentVerticals = getFiltroVertical();
+  const cons = currentVerticals.includes('Todos')
+    ? consFull
     : consFull.filter(c => currentVerticals.includes(c.vertical));
-  
+
   const vacsHoy = [];
   cons.forEach(c => {
     if (c.realVacations) {

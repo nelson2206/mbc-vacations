@@ -24,10 +24,26 @@ const APP_INITIAL = {
   importaciones: [],
   config: {
     empresa: "Indra / Minsait",
-    normativa: "DL 713 & DL 1405",
-    filtroVertical: ["Todos"]
+    normativa: "DL 713 & DL 1405"
   }
 };
+
+// Filtro de Vertical: vive en localStorage (por usuario), NO se sincroniza en la nube
+const FILTRO_VERTICAL_KEY = 'vacaperu_filtro_vertical';
+function getFiltroVertical() {
+  try {
+    const raw = localStorage.getItem(FILTRO_VERTICAL_KEY);
+    if (raw) {
+      const v = JSON.parse(raw);
+      if (Array.isArray(v) && v.length) return v;
+    }
+  } catch(e) {}
+  return ['Todos'];
+}
+function setFiltroVertical(arr) {
+  const safe = (Array.isArray(arr) && arr.length) ? arr : ['Todos'];
+  localStorage.setItem(FILTRO_VERTICAL_KEY, JSON.stringify(safe));
+}
 
 let APP = APP_INITIAL;
 let isFirstLoad = true;
@@ -46,10 +62,8 @@ database.ref('vacaperu_data').on('value', (snapshot) => {
     if (!APP.ventaVacaciones) APP.ventaVacaciones = [];
     if (!APP.importaciones) APP.importaciones = [];
     if (!APP.config) APP.config = APP_INITIAL.config;
-    // Migración: Convertir filtroVertical de string a array si es necesario
-    if (typeof APP.config.filtroVertical === 'string') {
-      APP.config.filtroVertical = [APP.config.filtroVertical];
-    }
+    // filtroVertical migró a localStorage (por usuario), ya no se persiste en la nube
+    if (APP.config.filtroVertical !== undefined) delete APP.config.filtroVertical;
   } else {
     // Si la base está vacía, intentamos cargar de localStorage por si acaso
     const local = localStorage.getItem(DB_KEY);

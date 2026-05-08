@@ -40,31 +40,27 @@ function closeSidebarOnMobile() {
 }
 
 function cambiarFiltroVertical(val) {
-  if (!Array.isArray(APP.config.filtroVertical)) {
-    APP.config.filtroVertical = [APP.config.filtroVertical || 'Todos'];
-  }
+  let current = getFiltroVertical();
 
   if (val === 'Todos') {
-    APP.config.filtroVertical = ['Todos'];
+    current = ['Todos'];
   } else {
     // Si estaba "Todos", lo quitamos para poner la específica
-    const idxTodos = APP.config.filtroVertical.indexOf('Todos');
-    if (idxTodos > -1) APP.config.filtroVertical.splice(idxTodos, 1);
+    const idxTodos = current.indexOf('Todos');
+    if (idxTodos > -1) current.splice(idxTodos, 1);
 
-    const idx = APP.config.filtroVertical.indexOf(val);
+    const idx = current.indexOf(val);
     if (idx > -1) {
-      APP.config.filtroVertical.splice(idx, 1);
+      current.splice(idx, 1);
     } else {
-      APP.config.filtroVertical.push(val);
+      current.push(val);
     }
 
     // Si nos quedamos vacíos, volvemos a "Todos"
-    if (APP.config.filtroVertical.length === 0) {
-      APP.config.filtroVertical = ['Todos'];
-    }
+    if (current.length === 0) current = ['Todos'];
   }
 
-  saveData(APP);
+  setFiltroVertical(current);
   navigateTo('dashboard');
 }
 
