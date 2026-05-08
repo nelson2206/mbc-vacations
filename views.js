@@ -259,6 +259,8 @@ function renderDashboard() {
             const gozGabinB = calcDiasGozadosGabin(b);
             const gozRealA = calcDiasGozadosReales(a.id);
             const gozRealB = calcDiasGozadosReales(b.id);
+            const planA = calcDiasPlanificadosReales(a.id);
+            const planB = calcDiasPlanificadosReales(b.id);
             const diffA = gozGabinA - gozRealA;
             const diffB = gozGabinB - gozRealB;
 
@@ -268,6 +270,7 @@ function renderDashboard() {
             else if (conciliacionConfig.sortCol === 'truncos') { valA = a.diasTruncos || 0; valB = b.diasTruncos || 0; }
             else if (conciliacionConfig.sortCol === 'gozGabin') { valA = gozGabinA; valB = gozGabinB; }
             else if (conciliacionConfig.sortCol === 'gozReal') { valA = gozRealA; valB = gozRealB; }
+            else if (conciliacionConfig.sortCol === 'planificado') { valA = planA; valB = planB; }
             else if (conciliacionConfig.sortCol === 'diff') { valA = diffA; valB = diffB; }
             else if (conciliacionConfig.sortCol === 'estado') { valA = getAlertaLegal(a).nivel; valB = getAlertaLegal(b).nivel; }
             else { valA = a.nombre; valB = b.nombre; }
@@ -291,6 +294,7 @@ function renderDashboard() {
                 <th style="cursor:pointer" onclick="setConciliacionSort('truncos')">Días Truncos${getConciliacionSortIcon('truncos')}</th>
                 <th style="cursor:pointer" onclick="setConciliacionSort('gozGabin')">Gozados Gabin (Histórico)${getConciliacionSortIcon('gozGabin')}</th>
                 <th style="cursor:pointer" onclick="setConciliacionSort('gozReal')">Gozados Real (Gestión)${getConciliacionSortIcon('gozReal')}</th>
+                <th style="cursor:pointer" onclick="setConciliacionSort('planificado')" title="Días registrados en Gestión Real con fecha futura (no suman al gozado)">Planificado${getConciliacionSortIcon('planificado')}</th>
                 <th style="cursor:pointer" onclick="setConciliacionSort('diff')">Diferencia (Deuda)${getConciliacionSortIcon('diff')}</th>
                 <th style="cursor:pointer" onclick="setConciliacionSort('estado')">Estado Legal${getConciliacionSortIcon('estado')}</th>
               </tr>
@@ -299,6 +303,7 @@ function renderDashboard() {
               const dispGabin = calcDiasGabin(c);
               const gozGabin = calcDiasGozadosGabin(c);
               const gozReal = calcDiasGozadosReales(c.id);
+              const planificado = calcDiasPlanificadosReales(c.id);
               const diff = gozGabin - gozReal;
               const truncos = c.diasTruncos || 0;
               const truncosDisplay = truncos % 1 === 0 ? truncos : Number(truncos).toFixed(2);
@@ -311,6 +316,7 @@ function renderDashboard() {
                 <td><span style="color:var(--text-muted); font-size:1rem">${truncosDisplay}</span></td>
                 <td><span style="color:var(--bg-panel); font-weight:700">${Math.round(gozGabin)}</span></td>
                 <td><strong style="font-size:1.1rem; color:var(--accent)">${Math.round(gozReal)}</strong></td>
+                <td><span style="font-weight:600; color:${planificado > 0 ? 'var(--bg-panel)' : 'var(--text-muted)'}">${planificado > 0 ? Math.round(planificado) : '—'}</span></td>
                 <td>
                   <span style="font-weight:800; font-size:1.15rem; color:${diff > 0 ? 'var(--accent)' : diff < 0 ? 'var(--danger)' : 'var(--success)'}">
                     ${diff > 0 ? '+' + Math.round(diff) : Math.round(diff)}
@@ -575,6 +581,7 @@ function verDetalleConsultor(id) {
   const ant = calcAntiguedad(c.fechaIngreso, c.fechaCorteGabin);
   const gozGabin = calcDiasGozadosGabin(c);
   const gozReal = calcDiasGozadosReales(c.id);
+  const planificado = calcDiasPlanificadosReales(c.id);
   const realVacs = c.realVacations || [];
   
   const body = `
@@ -608,6 +615,7 @@ function verDetalleConsultor(id) {
           <div style="padding:20px;border-radius:15px;background:rgba(233, 78, 119, 0.03);border:1px solid rgba(233, 78, 119, 0.1)">
             <span style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase">Real (Gestión)</span><br>
             <strong style="font-size:2.4rem;color:var(--accent)">${Math.round(gozReal)}</strong> <span style="font-size:0.9rem">días</span>
+            ${planificado > 0 ? `<div style="margin-top:8px;font-size:0.8rem;color:var(--text-muted)">+ <strong style="color:var(--bg-panel)">${Math.round(planificado)} días planificados</strong> (no suman)</div>` : ''}
           </div>
         </div>
         
@@ -627,11 +635,13 @@ function verDetalleConsultor(id) {
         '<div class="empty-state" style="padding:40px;background:var(--bg-panel-alt);border-radius:15px"><div class="empty-icon" style="font-size:3rem">📅</div><h4>Sin historial real</h4><p>Importa el archivo de Gestión Real para ver las salidas efectivas</p></div>' :
         `<div class="table-container" style="border:1px solid var(--bg-panel-alt);border-radius:12px"><table style="width:100%">
           <thead style="background:var(--bg-panel-alt)"><tr><th style="padding:15px">Fecha Inicio</th><th>Fecha Fin</th><th>Días Tomados</th><th>Origen</th><th style="text-align:right; padding-right:15px">Acciones</th></tr></thead>
-          <tbody>${realVacs.map((v, idx) => `
-            <tr>
-              <td style="padding:15px"><strong>${v.inicio}</strong></td>
+          <tbody>${realVacs.map((v, idx) => {
+            const planif = esVacacionPlanificada(v);
+            return `
+            <tr style="${planif ? 'background:rgba(76, 17, 31, 0.025)' : ''}">
+              <td style="padding:15px"><strong>${v.inicio}</strong> ${planif ? '<span class="status yellow" style="margin-left:6px;padding:2px 8px;font-size:0.7rem">📅 Planificado</span>' : ''}</td>
               <td><strong>${v.fin}</strong></td>
-              <td><span class="status green" style="font-size:1rem;padding:5px 12px">${v.dias} días</span></td>
+              <td><span class="status ${planif ? 'yellow' : 'green'}" style="font-size:1rem;padding:5px 12px">${v.dias} días</span></td>
               <td><span style="color:var(--text-muted);font-size:0.8rem">${v.origen === 'Manual' ? 'Manual' : 'Importación Real'}</span></td>
               <td style="text-align:right; padding-right:15px">
                 <div style="display:flex; gap:8px; justify-content:flex-end">
@@ -643,7 +653,8 @@ function verDetalleConsultor(id) {
                   </button>
                 </div>
               </td>
-            </tr>`).join('')}</tbody>
+            </tr>`;
+          }).join('')}</tbody>
         </table></div>`}
     </div>
 
@@ -731,10 +742,14 @@ window.setGestionesSort = function(col) {
 function renderGestiones() {
   const consFull = getActiveConsultores();
   const allVacs = [];
+  let totalEjecutado = 0, totalPlanificado = 0;
   consFull.forEach(c => {
     if (c.realVacations) {
       c.realVacations.forEach((v, idx) => {
-        allVacs.push({ c, v, idx });
+        const planificada = esVacacionPlanificada(v);
+        allVacs.push({ c, v, idx, planificada });
+        if (planificada) totalPlanificado += (v.dias || 0);
+        else totalEjecutado += (v.dias || 0);
       });
     }
   });
@@ -745,7 +760,8 @@ function renderGestiones() {
     else if (gestionesConfig.sortCol === 'fin') { valA = a.v.fin; valB = b.v.fin; }
     else if (gestionesConfig.sortCol === 'dias') { valA = a.v.dias; valB = b.v.dias; }
     else if (gestionesConfig.sortCol === 'nombre') { valA = a.c.nombre; valB = b.c.nombre; }
-    
+    else if (gestionesConfig.sortCol === 'estado') { valA = a.planificada ? 1 : 0; valB = b.planificada ? 1 : 0; }
+
     if (valA < valB) return gestionesConfig.sortAsc ? -1 : 1;
     if (valA > valB) return gestionesConfig.sortAsc ? 1 : -1;
     return 0;
@@ -766,7 +782,18 @@ function renderGestiones() {
         </button>
       </div>
     </div>
-    
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px">
+      <div style="padding:18px;border-radius:12px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2)">
+        <span style="color:var(--text-muted);font-size:0.78rem;font-weight:600;text-transform:uppercase">Total Ejecutado</span><br>
+        <strong style="font-size:1.8rem;color:var(--success)">${totalEjecutado}</strong> <span style="font-size:0.85rem;color:var(--text-muted)">días gozados (suman al gozReal)</span>
+      </div>
+      <div style="padding:18px;border-radius:12px;background:rgba(76, 17, 31, 0.04);border:1px solid rgba(76, 17, 31, 0.15)">
+        <span style="color:var(--text-muted);font-size:0.78rem;font-weight:600;text-transform:uppercase">Total Planificado</span><br>
+        <strong style="font-size:1.8rem;color:var(--bg-panel)">${totalPlanificado}</strong> <span style="font-size:0.85rem;color:var(--text-muted)">días futuros (no suman al total)</span>
+      </div>
+    </div>
+
     <div class="card">
       ${allVacs.length === 0 ? '<div class="empty-state"><div class="empty-icon">🏖️</div><h4>No hay salidas registradas</h4><p>Registra vacaciones manualmente o importa un archivo de Gestión Real.</p></div>' :
       `<div class="table-container" style="max-height:600px; overflow-y:auto">
@@ -778,18 +805,20 @@ function renderGestiones() {
               <th style="cursor:pointer" onclick="setGestionesSort('inicio')">Inicio${getSortIcon('inicio')}</th>
               <th style="cursor:pointer" onclick="setGestionesSort('fin')">Fin${getSortIcon('fin')}</th>
               <th style="cursor:pointer" onclick="setGestionesSort('dias')">Días${getSortIcon('dias')}</th>
+              <th style="cursor:pointer" onclick="setGestionesSort('estado')">Estado${getSortIcon('estado')}</th>
               <th>Origen</th>
               <th style="text-align:right">Acciones</th>
             </tr>
           </thead>
           <tbody>
             ${allVacs.map(item => `
-              <tr>
+              <tr style="${item.planificada ? 'background:rgba(76, 17, 31, 0.025)' : ''}">
                 <td><strong style="color:var(--bg-panel)">${item.c.nombre}</strong></td>
                 <td><span style="color:var(--text-muted);font-size:0.85rem">${item.c.vertical || item.c.cargo}</span></td>
                 <td><strong>${item.v.inicio}</strong></td>
                 <td><strong>${item.v.fin}</strong></td>
-                <td><span class="status green" style="padding:4px 10px">${item.v.dias} días</span></td>
+                <td><span class="status ${item.planificada ? 'yellow' : 'green'}" style="padding:4px 10px">${item.v.dias} días</span></td>
+                <td><span class="status ${item.planificada ? 'yellow' : 'green'}" style="padding:4px 10px;font-size:0.78rem">${item.planificada ? '📅 Planificado' : '✅ Ejecutado'}</span></td>
                 <td><span style="color:var(--text-muted);font-size:0.8rem">${item.v.origen}</span></td>
                 <td style="text-align:right">
                   <div style="display:flex; gap:8px; justify-content:flex-end">

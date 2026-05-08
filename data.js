@@ -243,9 +243,29 @@ function calcDiasGozadosGabin(c) {
   return gozados < 0 ? 0 : gozados;
 }
 
+// Una vacación está "planificada" si su fecha de inicio es posterior a hoy
+// (aún no ha empezado). Si ya empezó (o no tiene fecha de inicio), cuenta como ejecutada.
+function esVacacionPlanificada(v) {
+  if (!v || !v.inicio) return false;
+  const hoyISO = new Date().toISOString().slice(0, 10);
+  return v.inicio > hoyISO;
+}
+
 function calcDiasGozadosReales(consultorId) {
   const c = getConsultor(consultorId);
-  return (c && c.realVacations) ? c.realVacations.reduce((sum, v) => sum + (v.dias || 0), 0) : 0;
+  if (!c || !c.realVacations) return 0;
+  // Solo suma vacaciones ejecutadas o en curso; las planificadas (futuras) se excluyen
+  return c.realVacations
+    .filter(v => !esVacacionPlanificada(v))
+    .reduce((sum, v) => sum + (v.dias || 0), 0);
+}
+
+function calcDiasPlanificadosReales(consultorId) {
+  const c = getConsultor(consultorId);
+  if (!c || !c.realVacations) return 0;
+  return c.realVacations
+    .filter(v => esVacacionPlanificada(v))
+    .reduce((sum, v) => sum + (v.dias || 0), 0);
 }
 
 function calcDiasDisponibles(consultor) {
