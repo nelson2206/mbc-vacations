@@ -392,7 +392,7 @@ function renderConsultores() {
           <th style="text-align:right">Acciones</th>
         </tr></thead>
         <tbody>${cons.map(c => {
-          const ant = calcAntiguedad(c.fechaIngreso);
+          const ant = calcAntiguedad(c.fechaIngreso, c.fechaCorteGabin);
           const disp = calcDiasDisponibles(c);
           const al = getAlertaLegal(c);
           const cls = al.nivel==='critical'?'red':al.nivel==='warning'?'yellow':'green';
@@ -572,7 +572,7 @@ function verDetalleConsultor(id) {
   const c = getConsultor(id);
   if (!c) return;
 
-  const ant = calcAntiguedad(c.fechaIngreso);
+  const ant = calcAntiguedad(c.fechaIngreso, c.fechaCorteGabin);
   const gozGabin = calcDiasGozadosGabin(c);
   const gozReal = calcDiasGozadosReales(c.id);
   const realVacs = c.realVacations || [];
@@ -815,7 +815,7 @@ function renderAuditoria() {
   const outliers = [];
   
   cons.forEach(c => {
-    const ant = calcAntiguedad(c.fechaIngreso);
+    const ant = calcAntiguedad(c.fechaIngreso, c.fechaCorteGabin);
     const disp = calcDiasGabin(c);
     const real = calcDiasGozadosReales(c.id);
     const hist = calcDiasGozadosGabin(c);

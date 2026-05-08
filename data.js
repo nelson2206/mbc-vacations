@@ -109,7 +109,7 @@ function saveData(data) {
 
 
 // ===== CÁLCULOS LEGALES PERÚ =====
-function calcAntiguedad(fechaIngreso) {
+function calcAntiguedad(fechaIngreso, fechaCorte) {
   if (!fechaIngreso) return { years: 0, months: 0, totalMonths: 0 };
   const toISO = (val) => {
     if (typeof val !== 'string') return val;
@@ -121,10 +121,12 @@ function calcAntiguedad(fechaIngreso) {
   };
   const isoStr = toISO(fechaIngreso);
   const ing = new Date(isoStr.replace(/-/g, '\/'));
-  const hoy = new Date();
-  let years = hoy.getFullYear() - ing.getFullYear();
-  let months = hoy.getMonth() - ing.getMonth();
-  if (hoy.getDate() < ing.getDate()) months--;
+  const ref = fechaCorte
+    ? new Date(toISO(fechaCorte).replace(/-/g, '\/'))
+    : new Date();
+  let years = ref.getFullYear() - ing.getFullYear();
+  let months = ref.getMonth() - ing.getMonth();
+  if (ref.getDate() < ing.getDate()) months--;
   if (months < 0) { years--; months += 12; }
   if (years < 0) { years = 0; months = 0; }
   return { years, months, totalMonths: years * 12 + months };
@@ -206,13 +208,13 @@ function addVenta(v) {
 }
 
 function calcTotalHistorico(consultor) {
-  const ant = calcAntiguedad(consultor.fechaIngreso);
-  // Según ley: 30 días por cada año completo de servicios
+  const ant = calcAntiguedad(consultor.fechaIngreso, consultor.fechaCorteGabin);
+  // Según ley: 30 días por cada año completo de servicios (a la fecha de corte del reporte)
   return ant.years * 30;
 }
 
 function calcDiasGozadosGabin(c) {
-  const ant = calcAntiguedad(c.fechaIngreso);
+  const ant = calcAntiguedad(c.fechaIngreso, c.fechaCorteGabin);
   const pendiente = c.diasPendientesHR || 0;
   
   if (ant.years === 0) {

@@ -471,8 +471,11 @@ function processingRRHH(rows, filename) {
   }
 
   const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  let fechaCorteISO = '';
   if (y && m && d) {
     APP.config.fechaActualizacion = `${parseInt(d, 10)} de ${months[parseInt(m, 10)-1]} de ${y}`;
+    fechaCorteISO = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    APP.config.fechaCorteGabin = fechaCorteISO;
   } else {
     // FALLBACK: If we still can't parse the date, just show the filename so the user can see it
     APP.config.fechaActualizacion = `${filename} (Fecha no detectada)`;
@@ -536,15 +539,15 @@ function processingRRHH(rows, filename) {
     // Fallback date logic
     if (!maxSalida && fechaIngreso && vigentes > 0) {
       const dIng = new Date(fechaIngreso);
-      const hoy = new Date();
-      const ant = calcAntiguedad(fechaIngreso);
+      const ref = fechaCorteISO ? new Date(fechaCorteISO) : new Date();
+      const ant = calcAntiguedad(fechaIngreso, fechaCorteISO);
       if (ant.years >= 1) {
         // "mes anterior de su fecha de ingreso para el año en curso"
         const mesIng = dIng.getMonth();
         let targetMonth = mesIng - 1;
-        let targetYear = hoy.getFullYear();
+        let targetYear = ref.getFullYear();
         if (targetMonth < 0) { targetMonth = 11; targetYear--; }
-        
+
         const lastDay = new Date(targetYear, targetMonth + 1, 0);
         maxSalida = lastDay.toISOString().slice(0, 10);
       }
@@ -566,6 +569,7 @@ function processingRRHH(rows, filename) {
       existing.diasTruncos = truncos;
       existing.fechaMaxGabin = maxSalida;
       existing.fechaUltimaImportacion = now;
+      if (fechaCorteISO) existing.fechaCorteGabin = fechaCorteISO;
       if (fechaIngreso) existing.fechaIngreso = fechaIngreso;
       updated++;
     } else {
@@ -579,6 +583,7 @@ function processingRRHH(rows, filename) {
         diasPendientesHR: vigentes,
         diasTruncos: truncos,
         fechaMaxGabin: maxSalida,
+        fechaCorteGabin: fechaCorteISO,
         realVacations: []
       };
       APP.consultores.push(existing);
