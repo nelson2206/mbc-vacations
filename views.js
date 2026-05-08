@@ -73,17 +73,22 @@ function renderDashboard() {
 
   function renderRiskCard(c) {
     const disp = calcDiasGabin(c);
+    const planificado = calcDiasPlanificadosReales(c.id);
     const al = getAlertaLegal(c);
     const cls = al.nivel === 'critical' ? 'crit' : al.nivel === 'warning' ? 'warn' : 'safe';
     const colors = { crit: '#ef4444', warn: '#f59e0b', safe: '#10b981' };
     const fechaMax = c.fechaMaxGabin ? `<div style="font-size:0.65rem;margin-top:2px;color:var(--text-muted)">Max Gabin: <strong>${c.fechaMaxGabin}</strong></div>` : '';
-    
+    const planTag = planificado > 0
+      ? `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 8px;border-radius:10px;background:rgba(76,17,31,0.08);color:var(--bg-panel);font-size:0.65rem;font-weight:700">📅 ${Math.round(planificado)} días planificados</div>`
+      : '';
+
     return `<div class="risk-person-card risk-${cls}" onclick="verDetalleConsultor('${c.id}')" style="cursor:pointer">
       <div class="risk-avatar">${getInitials(c.nombre)}</div>
       <div class="risk-person-info">
         <div class="risk-person-name">${shortenName(c.nombre)}</div>
         <div class="risk-person-cargo">${c.vertical || c.cargo}</div>
         ${fechaMax}
+        ${planTag}
       </div>
       <div class="risk-person-days">
         <span class="risk-days-number">${disp}</span>
