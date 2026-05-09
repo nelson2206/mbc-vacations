@@ -260,6 +260,110 @@ function calcDiasGozadosReales(consultorId) {
     .reduce((sum, v) => sum + (v.dias || 0), 0);
 }
 
+// ===== CONFLICTOS DE COBERTURA (M / SM en misma vertical, mismas fechas) =====
+// Detecta ventanas donde 3 o más Manager/Senior Manager de la misma vertical
+// están de vacaciones a la vez. No bloquea: solo alerta para que un humano apruebe.
+
+function _esLiderazgo(c) {
+  const cargo = String(c && c.cargo || '').toLowerCase().trim();
+  return cargo === 'manager' || cargo === 'senior manager';
+}
+
+function _coberturaKey(w) {
+  const ids = (w.miembros || []).map(m => m.c.id).slice().sort().join(',');
+  return `${w.vertical}|${w.inicio}|${w.fin}|${ids}`;
+}
+
+function findConflictosCobertura() {
+  const lideres = (APP.consultores || []).filter(c => c && c.estado === 'activo' && _esLiderazgo(c));
+  const porVertical = new Map();
+  lideres.forEach(c => {
+    const v = c.vertical || '(Sin vertical)';
+    if (!porVertical.has(v)) porVertical.set(v, []);
+    porVertical.get(v).push(c);
+  });
+
+  const aprobados = new Set((APP.config && APP.config.coberturaAprobada) || []);
+  const ventanas = [];
+
+  porVertical.forEach((cons, vertical) => {
+    if (cons.length < 3) return;
+    // Recolectar (consultor, vacación) en esta vertical
+    const items = [];
+    cons.forEach(c => (c.realVacations || []).forEach(v => {
+      if (v && v.inicio && v.fin) items.push({ c, v });
+    }));
+    if (items.length < 3) return;
+
+    // Sweep line por días: cuando 3+ consultores ÚNICOS están out, abrir ventana
+    const dayCount = new Map(); // ISO day -> Map(consultorId -> count)
+    items.forEach(it => {
+      let d = new Date(it.v.inicio + 'T00:00:00');
+      const end = new Date(it.v.fin + 'T00:00:00');
+      while (d <= end) {
+        const iso = d.toISOString().slice(0, 10);
+        if (!dayCount.has(iso)) dayCount.set(iso, new Map());
+        const m = dayCount.get(iso);
+        m.set(it.c.id, (m.get(it.c.id) || 0) + 1);
+        d.setDate(d.getDate() + 1);
+      }
+    });
+
+    // Días ordenados con >=3 consultores únicos
+    const hot = [...dayCount.entries()]
+      .filter(([, m]) => m.size >= 3)
+      .map(([day, m]) => ({ day, ids: [...m.keys()] }))
+      .sort((a, b) => a.day < b.day ? -1 : 1);
+
+    // Agrupar días contiguos en ventanas
+    let cur = null;
+    hot.forEach(h => {
+      const prev = cur && cur.fin;
+      const isNext = prev && (() => {
+        const d = new Date(prev + 'T00:00:00');
+        d.setDate(d.getDate() + 1);
+        return d.toISOString().slice(0, 10) === h.day;
+      })();
+      if (cur && isNext) {
+        cur.fin = h.day;
+        h.ids.forEach(id => cur.miembrosIds.add(id));
+      } else {
+        if (cur) ventanas.push(cur);
+        cur = { vertical, inicio: h.day, fin: h.day, miembrosIds: new Set(h.ids) };
+      }
+    });
+    if (cur) ventanas.push(cur);
+  });
+
+  // Hidratar miembros con datos completos
+  return ventanas.map(w => {
+    const miembros = [...w.miembrosIds].map(id => {
+      const c = getConsultor(id);
+      const v = (c && c.realVacations || []).find(x => x && x.inicio && x.fin && !(x.fin < w.inicio || x.inicio > w.fin));
+      return { c, v };
+    }).filter(m => m.c);
+    const out = { vertical: w.vertical, inicio: w.inicio, fin: w.fin, miembros };
+    out.key = _coberturaKey(out);
+    out.aprobado = aprobados.has(out.key);
+    return out;
+  });
+}
+
+function aprobarConflictoCobertura(key) {
+  if (!APP.config) APP.config = {};
+  if (!Array.isArray(APP.config.coberturaAprobada)) APP.config.coberturaAprobada = [];
+  if (!APP.config.coberturaAprobada.includes(key)) {
+    APP.config.coberturaAprobada.push(key);
+    saveData(APP);
+  }
+}
+
+function desaprobarConflictoCobertura(key) {
+  if (!APP.config || !Array.isArray(APP.config.coberturaAprobada)) return;
+  APP.config.coberturaAprobada = APP.config.coberturaAprobada.filter(k => k !== key);
+  saveData(APP);
+}
+
 // Recorre todos los consultores y devuelve la lista de pares de vacaciones
 // que se superponen (cada par aparece una sola vez).
 // Estructura: [{ consultor, a:{idx,v}, b:{idx,v} }, ...]

@@ -846,18 +846,22 @@ function renderGestiones() {
 
 function renderConflictos() {
   const conflictos = findAllConflictos();
+  const cobertura = findConflictosCobertura();
+  const coberturaPendiente = cobertura.filter(w => !w.aprobado);
+  const coberturaAprobada = cobertura.filter(w => w.aprobado);
+  const totalPendientes = conflictos.length + coberturaPendiente.length;
 
-  if (conflictos.length === 0) {
+  if (totalPendientes === 0 && coberturaAprobada.length === 0) {
     return `
       <div class="page-header">
         <h2><span style="font-size:24px; vertical-align:middle; margin-right:8px">⚠️</span>Conflictos de Vacaciones</h2>
-        <p>Revisa registros con fechas superpuestas para el mismo consultor</p>
+        <p>Revisa registros superpuestos y alertas de cobertura de liderazgo</p>
       </div>
       <div class="card">
         <div class="empty-state" style="padding:60px 20px">
           <div class="empty-icon" style="font-size:4rem;margin-bottom:8px">✅</div>
           <h4 style="font-size:1.4rem;margin-bottom:6px">Sin conflictos pendientes</h4>
-          <p style="color:var(--text-muted)">Ningún consultor tiene fechas de vacaciones superpuestas.</p>
+          <p style="color:var(--text-muted)">Ningún consultor tiene fechas superpuestas y la cobertura de Managers/Senior Managers está OK.</p>
         </div>
       </div>
     `;
@@ -933,17 +937,79 @@ function renderConflictos() {
       </div>`;
   }).join('');
 
+  // ===== SECCIÓN DE COBERTURA (3+ M/SM en misma vertical, fechas que se cruzan) =====
+  const renderCobertura = (w) => {
+    const dias = (() => {
+      const a = new Date(w.inicio + 'T00:00:00');
+      const b = new Date(w.fin + 'T00:00:00');
+      return Math.round((b - a) / 86400000) + 1;
+    })();
+    return `
+      <div style="padding:18px;border-radius:14px;background:${w.aprobado ? 'rgba(16,185,129,0.05)' : 'rgba(245,158,11,0.06)'};border:1px solid ${w.aprobado ? 'rgba(16,185,129,0.25)' : 'rgba(245,158,11,0.3)'};margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+              <span style="font-size:0.7rem;font-weight:800;letter-spacing:0.08em;color:${w.aprobado ? 'var(--success)' : '#b45309'};text-transform:uppercase">${w.aprobado ? '✓ Aprobado · Cobertura' : '⚠️ Cobertura de liderazgo'}</span>
+              <span style="font-size:0.78rem;color:var(--text-muted)">${w.miembros.length} líderes en <strong style="color:var(--bg-panel)">${w.vertical}</strong></span>
+            </div>
+            <div style="font-size:1rem"><strong>${w.inicio}</strong> → <strong>${w.fin}</strong> <span style="color:var(--text-muted);font-size:0.85rem">(${dias} día${dias === 1 ? '' : 's'})</span></div>
+          </div>
+          <div style="display:flex;gap:8px">
+            ${w.aprobado
+              ? `<button class="btn btn-outline btn-sm" onclick="reabrirCobertura('${w.key}')" style="padding:7px 14px;font-size:0.78rem">Reabrir</button>`
+              : `<button class="btn btn-primary btn-sm" onclick="aprobarCobertura('${w.key}')" style="padding:7px 14px;font-size:0.78rem">✓ Aprobar y silenciar</button>`}
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${w.miembros.map(m => `
+            <div onclick="verDetalleConsultor('${m.c.id}')" style="cursor:pointer;padding:8px 14px;border-radius:10px;background:white;border:1px solid var(--bg-panel-alt);font-size:0.85rem">
+              <strong style="color:var(--bg-panel)">${shortenName(m.c.nombre)}</strong>
+              <span style="color:var(--text-muted);margin-left:6px;font-size:0.78rem">${m.c.cargo || '—'}</span>
+              ${m.v ? `<span style="color:var(--text-muted);margin-left:6px;font-size:0.75rem">· ${m.v.inicio}→${m.v.fin}</span>` : ''}
+            </div>`).join('')}
+        </div>
+      </div>`;
+  };
+
+  const seccionCobertura = (coberturaPendiente.length > 0 || coberturaAprobada.length > 0) ? `
+    <div class="section" style="margin-top:8px">
+      <div class="section-title" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span>🎯 Cobertura de Liderazgo</span>
+        ${coberturaPendiente.length > 0 ? `<span style="background:#f59e0b;color:white;font-size:0.7rem;font-weight:800;padding:2px 9px;border-radius:10px">${coberturaPendiente.length} sin aprobar</span>` : ''}
+      </div>
+      <div style="padding:12px 16px;border-radius:10px;background:rgba(76,17,31,0.04);border:1px solid rgba(76,17,31,0.1);margin-bottom:14px;font-size:0.82rem;color:var(--text-on-light);line-height:1.5">
+        Cuando 3 o más Managers o Senior Managers de la misma vertical están de vacaciones en días que se cruzan, aparece una alerta. <strong>No bloquea ni borra nada</strong> — sólo te avisa para que decides aprobarlo (si la cobertura está cubierta) o gestionarlo.
+      </div>
+      ${coberturaPendiente.map(renderCobertura).join('')}
+      ${coberturaAprobada.length > 0 ? `
+        <details style="margin-top:10px">
+          <summary style="cursor:pointer;font-size:0.85rem;color:var(--text-muted);padding:8px 0">${coberturaAprobada.length} aprobado${coberturaAprobada.length === 1 ? '' : 's'} previamente (clic para ver)</summary>
+          <div style="margin-top:10px">${coberturaAprobada.map(renderCobertura).join('')}</div>
+        </details>` : ''}
+    </div>
+  ` : '';
+
+  const seccionOverlap = conflictos.length > 0 ? `
+    <div class="section" style="margin-top:24px">
+      <div class="section-title" style="display:flex;align-items:center;gap:10px">
+        <span>📅 Fechas Superpuestas</span>
+        <span style="background:var(--accent);color:white;font-size:0.7rem;font-weight:800;padding:2px 9px;border-radius:10px">${conflictos.length}</span>
+      </div>
+      <div style="padding:12px 16px;border-radius:10px;background:rgba(76,17,31,0.04);border:1px solid rgba(76,17,31,0.12);margin-bottom:14px;font-size:0.82rem;color:var(--text-on-light);line-height:1.5">
+        <strong>💡 Cómo resolver:</strong> usa <em>Conservar esta</em> para borrar el otro registro, o <em>✏️ Editar</em> para ajustar las fechas. La validación de superposición bloqueará el guardado si las nuevas fechas siguen chocando.
+      </div>
+      ${tarjetas}
+    </div>
+  ` : '';
+
   return `
     <div class="page-header">
-      <h2><span style="font-size:24px; vertical-align:middle; margin-right:8px">⚠️</span>Conflictos de Vacaciones <span style="background:var(--accent);color:white;font-size:0.8rem;padding:3px 10px;border-radius:12px;margin-left:8px;vertical-align:middle">${conflictos.length}</span></h2>
-      <p>Revisa registros con fechas superpuestas. Conserva uno o edita las fechas para resolver cada conflicto.</p>
+      <h2><span style="font-size:24px; vertical-align:middle; margin-right:8px">⚠️</span>Conflictos de Vacaciones <span style="background:var(--accent);color:white;font-size:0.8rem;padding:3px 10px;border-radius:12px;margin-left:8px;vertical-align:middle">${totalPendientes}</span></h2>
+      <p>Cobertura de liderazgo y registros con fechas superpuestas</p>
     </div>
 
-    <div style="padding:14px 18px;border-radius:12px;background:rgba(76,17,31,0.04);border:1px solid rgba(76,17,31,0.12);margin-bottom:20px;font-size:0.85rem;color:var(--text-on-light);line-height:1.55">
-      <strong>💡 Cómo resolver:</strong> usa <em>Conservar esta</em> para borrar el otro registro, o <em>✏️ Editar</em> para ajustar las fechas (recortar uno hasta que no se cruce). La validación de superposición bloqueará el guardado si las nuevas fechas siguen chocando.
-    </div>
-
-    ${tarjetas}
+    ${seccionCobertura}
+    ${seccionOverlap}
   `;
 }
 

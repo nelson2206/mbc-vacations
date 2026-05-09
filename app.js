@@ -78,7 +78,11 @@ function updateAlertBadge() {
 function updateConflictosBadge() {
   const badge = document.getElementById('conflictosBadge');
   if (!badge) return;
-  const count = (typeof findAllConflictos === 'function') ? findAllConflictos().length : 0;
+  const overlaps = (typeof findAllConflictos === 'function') ? findAllConflictos().length : 0;
+  const cobertura = (typeof findConflictosCobertura === 'function')
+    ? findConflictosCobertura().filter(w => !w.aprobado).length
+    : 0;
+  const count = overlaps + cobertura;
   badge.textContent = count;
   badge.style.display = count > 0 ? 'inline-flex' : 'none';
 }
@@ -119,8 +123,14 @@ function openModalConsultor(id) {
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Cargo</label>
-        <input class="form-control" id="fCargo" value="${c?c.cargo:''}" placeholder="Consultor Senior">
+        <label>Cargo <span style="font-weight:400;color:var(--text-muted);font-size:0.75rem">(usado para alertas de cobertura)</span></label>
+        <input class="form-control" id="fCargo" list="cargosLista" value="${c?c.cargo:''}" placeholder="Consultor / Senior / Manager / Senior Manager">
+        <datalist id="cargosLista">
+          <option value="Consultor"></option>
+          <option value="Senior"></option>
+          <option value="Manager"></option>
+          <option value="Senior Manager"></option>
+        </datalist>
       </div>
       <div class="form-group">
         <label>Fecha de ingreso</label>
@@ -344,6 +354,18 @@ function confirmarResolverConflicto(cid, idxRemove) {
   saveData(APP);
   closeModal();
   showToast('Conflicto resuelto', 'success');
+  navigateTo('conflictos');
+}
+
+function aprobarCobertura(key) {
+  aprobarConflictoCobertura(key);
+  showToast('Conflicto de cobertura aprobado', 'success');
+  navigateTo('conflictos');
+}
+
+function reabrirCobertura(key) {
+  desaprobarConflictoCobertura(key);
+  showToast('Conflicto de cobertura reabierto', 'info');
   navigateTo('conflictos');
 }
 
