@@ -844,6 +844,109 @@ function renderGestiones() {
   `;
 }
 
+function renderConflictos() {
+  const conflictos = findAllConflictos();
+
+  if (conflictos.length === 0) {
+    return `
+      <div class="page-header">
+        <h2><span style="font-size:24px; vertical-align:middle; margin-right:8px">⚠️</span>Conflictos de Vacaciones</h2>
+        <p>Revisa registros con fechas superpuestas para el mismo consultor</p>
+      </div>
+      <div class="card">
+        <div class="empty-state" style="padding:60px 20px">
+          <div class="empty-icon" style="font-size:4rem;margin-bottom:8px">✅</div>
+          <h4 style="font-size:1.4rem;margin-bottom:6px">Sin conflictos pendientes</h4>
+          <p style="color:var(--text-muted)">Ningún consultor tiene fechas de vacaciones superpuestas.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // Agrupar por consultor para mostrar contiguos
+  const porConsultor = new Map();
+  conflictos.forEach(k => {
+    const id = k.consultor.id;
+    if (!porConsultor.has(id)) porConsultor.set(id, { consultor: k.consultor, items: [] });
+    porConsultor.get(id).items.push(k);
+  });
+
+  const renderTarjeta = (label, side) => {
+    const v = side.v;
+    const planif = esVacacionPlanificada(v);
+    const hoy = new Date().toISOString().slice(0,10);
+    const finished = v.fin && v.fin < hoy;
+    const tag = planif
+      ? '<span class="status yellow" style="padding:3px 10px;font-size:0.7rem">📅 Planificada</span>'
+      : finished
+        ? '<span class="status green" style="padding:3px 10px;font-size:0.7rem">✅ Ejecutada</span>'
+        : '<span class="status green" style="padding:3px 10px;font-size:0.7rem">▶ En curso</span>';
+    return `
+      <div style="flex:1;padding:18px;border-radius:12px;background:white;border:1.5px solid var(--bg-panel-alt)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px">
+          <strong style="font-size:0.7rem;letter-spacing:0.1em;color:var(--text-muted);text-transform:uppercase">Opción ${label}</strong>
+          ${tag}
+        </div>
+        <div style="font-size:1.05rem;margin-bottom:4px"><strong>${v.inicio}</strong> → <strong>${v.fin}</strong></div>
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px">${v.dias} día${v.dias === 1 ? '' : 's'} · ${v.origen}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="resolverConflicto('${side.cid}', ${side.idx}, ${side.otherIdx})" style="flex:1;padding:8px 10px;font-size:0.78rem">Conservar esta</button>
+          <button class="btn btn-outline btn-sm" onclick="editarVacacionReal('${side.cid}', ${side.idx})" title="Editar fechas" style="padding:8px 10px;font-size:0.78rem">✏️ Editar</button>
+        </div>
+      </div>`;
+  };
+
+  const tarjetas = [...porConsultor.values()].map(group => {
+    const c = group.consultor;
+    const inner = group.items.map((k, i) => {
+      const a = { cid: c.id, idx: k.a.idx, otherIdx: k.b.idx, v: k.a.v };
+      const b = { cid: c.id, idx: k.b.idx, otherIdx: k.a.idx, v: k.b.v };
+      // Calcular días de superposición visible
+      const overlapStart = k.a.v.inicio > k.b.v.inicio ? k.a.v.inicio : k.b.v.inicio;
+      const overlapEnd = k.a.v.fin < k.b.v.fin ? k.a.v.fin : k.b.v.fin;
+      return `
+        <div style="padding:18px;border-radius:14px;background:rgba(233,78,119,0.04);border:1px solid rgba(233,78,119,0.2);${i > 0 ? 'margin-top:14px' : ''}">
+          <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:0.7rem;font-weight:800;letter-spacing:0.08em;color:var(--accent);text-transform:uppercase">Conflicto ${i+1}</span>
+            <span style="font-size:0.78rem;color:var(--text-muted)">→ se cruzan en <strong style="color:var(--bg-panel)">${overlapStart}</strong> a <strong style="color:var(--bg-panel)">${overlapEnd}</strong></span>
+          </div>
+          <div style="display:flex;gap:14px;align-items:stretch;flex-wrap:wrap">
+            ${renderTarjeta('A', a)}
+            <div style="display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);font-size:0.9rem;letter-spacing:0.1em">VS</div>
+            ${renderTarjeta('B', b)}
+          </div>
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="card" style="margin-bottom:18px">
+        <div style="padding:18px 22px 14px;border-bottom:1px solid var(--bg-panel-alt);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-size:1.1rem;font-weight:800;color:var(--bg-panel)">${c.nombre}</div>
+            <div style="font-size:0.8rem;color:var(--text-muted)">${c.vertical || c.cargo}</div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="verDetalleConsultor('${c.id}')" style="padding:6px 14px;font-size:0.78rem">Ver perfil completo</button>
+        </div>
+        <div style="padding:18px 22px">
+          ${inner}
+        </div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="page-header">
+      <h2><span style="font-size:24px; vertical-align:middle; margin-right:8px">⚠️</span>Conflictos de Vacaciones <span style="background:var(--accent);color:white;font-size:0.8rem;padding:3px 10px;border-radius:12px;margin-left:8px;vertical-align:middle">${conflictos.length}</span></h2>
+      <p>Revisa registros con fechas superpuestas. Conserva uno o edita las fechas para resolver cada conflicto.</p>
+    </div>
+
+    <div style="padding:14px 18px;border-radius:12px;background:rgba(76,17,31,0.04);border:1px solid rgba(76,17,31,0.12);margin-bottom:20px;font-size:0.85rem;color:var(--text-on-light);line-height:1.55">
+      <strong>💡 Cómo resolver:</strong> usa <em>Conservar esta</em> para borrar el otro registro, o <em>✏️ Editar</em> para ajustar las fechas (recortar uno hasta que no se cruce). La validación de superposición bloqueará el guardado si las nuevas fechas siguen chocando.
+    </div>
+
+    ${tarjetas}
+  `;
+}
+
 function renderAuditoria() {
   const cons = getActiveConsultores();
   const outliers = [];

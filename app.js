@@ -13,10 +13,12 @@ function navigateTo(view) {
     case 'importar': main.innerHTML = renderImportar(); break;
     case 'gestiones': main.innerHTML = renderGestiones(); break;
     case 'reportes': main.innerHTML = renderReportes(); break;
+    case 'conflictos': main.innerHTML = renderConflictos(); break;
   }
   main.scrollTop = 0;
   window.scrollTo(0, 0);
   updateAlertBadge();
+  updateConflictosBadge();
   closeSidebarOnMobile();
 }
 
@@ -71,6 +73,14 @@ function updateAlertBadge() {
     badge.textContent = count;
     badge.style.display = count > 0 ? 'inline' : 'none';
   }
+}
+
+function updateConflictosBadge() {
+  const badge = document.getElementById('conflictosBadge');
+  if (!badge) return;
+  const count = (typeof findAllConflictos === 'function') ? findAllConflictos().length : 0;
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
 }
 
 // ===== MODAL =====
@@ -297,6 +307,44 @@ function guardarEdicionReal(cid, idx) {
   closeModal();
   navigateTo(currentView);
   verDetalleConsultor(cid);
+}
+
+// Resuelve un conflicto: borra una de las dos vacaciones y conserva la otra.
+// idxKeep e idxRemove son los índices originales en c.realVacations.
+function resolverConflicto(cid, idxKeep, idxRemove) {
+  const c = getConsultor(cid);
+  if (!c || !c.realVacations) return;
+  const keep = c.realVacations[idxKeep];
+  const remove = c.realVacations[idxRemove];
+  if (!keep || !remove) return;
+
+  const body = `
+    <p style="margin-bottom:14px">Se conservará el siguiente registro:</p>
+    <div style="padding:14px;border-radius:10px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);margin-bottom:12px">
+      <strong>${keep.inicio} → ${keep.fin}</strong>
+      <span style="color:var(--text-muted);margin-left:8px">${keep.dias} días · ${keep.origen}</span>
+    </div>
+    <p style="margin-bottom:14px">Y se eliminará:</p>
+    <div style="padding:14px;border-radius:10px;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.25)">
+      <strong>${remove.inicio} → ${remove.fin}</strong>
+      <span style="color:var(--text-muted);margin-left:8px">${remove.dias} días · ${remove.origen}</span>
+    </div>`;
+  openModal(
+    `Resolver conflicto — ${c.nombre}`,
+    body,
+    `<button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+     <button class="btn btn-danger" onclick="confirmarResolverConflicto('${cid}', ${idxRemove})">Eliminar y conservar</button>`
+  );
+}
+
+function confirmarResolverConflicto(cid, idxRemove) {
+  const c = getConsultor(cid);
+  if (!c || !c.realVacations) return;
+  c.realVacations.splice(idxRemove, 1);
+  saveData(APP);
+  closeModal();
+  showToast('Conflicto resuelto', 'success');
+  navigateTo('conflictos');
 }
 
 function eliminarVacacionReal(cid, idx) {

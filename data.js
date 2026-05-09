@@ -260,6 +260,26 @@ function calcDiasGozadosReales(consultorId) {
     .reduce((sum, v) => sum + (v.dias || 0), 0);
 }
 
+// Recorre todos los consultores y devuelve la lista de pares de vacaciones
+// que se superponen (cada par aparece una sola vez).
+// Estructura: [{ consultor, a:{idx,v}, b:{idx,v} }, ...]
+function findAllConflictos() {
+  const conflictos = [];
+  (APP.consultores || []).forEach(c => {
+    const rv = c.realVacations || [];
+    for (let i = 0; i < rv.length; i++) {
+      for (let j = i + 1; j < rv.length; j++) {
+        const a = rv[i], b = rv[j];
+        if (!a || !b || !a.inicio || !a.fin || !b.inicio || !b.fin) continue;
+        if (!(a.fin < b.inicio || a.inicio > b.fin)) {
+          conflictos.push({ consultor: c, a: { idx: i, v: a }, b: { idx: j, v: b } });
+        }
+      }
+    }
+  });
+  return conflictos;
+}
+
 // Detecta si un rango [inicio, fin] se cruza con alguna vacación existente
 // del mismo consultor. Devuelve la vacación conflictiva (con su índice) o null.
 // excludeIdx evita comparar contra el propio registro al editar.
