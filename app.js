@@ -220,11 +220,18 @@ function guardarRegistroReal() {
   
   if (!cid || !fInicio || !fFin) { showToast('Selecciona un consultor válido de la lista y completa las fechas', 'error'); return; }
   if (new Date(fFin) < new Date(fInicio)) { showToast('La fecha final no puede ser antes de la inicial', 'error'); return; }
-  
+
   const c = getConsultor(cid);
   if (!c) return;
   if (!c.realVacations) c.realVacations = [];
-  
+
+  // Bloquear superposición con otras vacaciones del mismo consultor
+  const conflicto = findVacacionSuperpuesta(c.realVacations, fInicio, fFin);
+  if (conflicto) {
+    showToast(`Las fechas se cruzan con un registro existente: ${conflicto.v.inicio} → ${conflicto.v.fin} (${conflicto.v.dias} días, ${conflicto.v.origen})`, 'error');
+    return;
+  }
+
   const diff = calcDiffDias(fInicio, fFin);
   c.realVacations.push({
     inicio: fInicio,
@@ -232,7 +239,7 @@ function guardarRegistroReal() {
     dias: diff,
     origen: 'Manual'
   });
-  
+
   saveData(APP);
   showToast('Registro de gestión real añadido', 'success');
   closeModal();
@@ -273,7 +280,14 @@ function guardarEdicionReal(cid, idx) {
   
   if (!fInicio || !fFin) { showToast('Completa todos los campos', 'error'); return; }
   if (new Date(fFin) < new Date(fInicio)) { showToast('La fecha final no puede ser antes de la inicial', 'error'); return; }
-  
+
+  // Bloquear superposición con OTROS registros del mismo consultor (excluye el actual)
+  const conflicto = findVacacionSuperpuesta(c.realVacations, fInicio, fFin, idx);
+  if (conflicto) {
+    showToast(`Las fechas se cruzan con otro registro: ${conflicto.v.inicio} → ${conflicto.v.fin} (${conflicto.v.dias} días, ${conflicto.v.origen})`, 'error');
+    return;
+  }
+
   c.realVacations[idx].inicio = fInicio;
   c.realVacations[idx].fin = fFin;
   c.realVacations[idx].dias = calcDiffDias(fInicio, fFin);
@@ -750,6 +764,8 @@ function processingReal(rows, filename) {
   });
 
   const updatedConsultores = new Set();
+  let skippedOverlaps = 0;
+  const skippedSamples = [];
 
   rows.slice(1).forEach(row => {
     const id = idxID >= 0 ? String(row[idxID] || '').trim() : '';
@@ -796,6 +812,15 @@ function processingReal(rows, filename) {
 
     if (existing) {
       if (!existing.realVacations) existing.realVacations = [];
+      // Saltar si choca con un registro existente (manual o ya importado en esta corrida)
+      const conflicto = fIni && fFin ? findVacacionSuperpuesta(existing.realVacations, fIni, fFin) : null;
+      if (conflicto) {
+        skippedOverlaps++;
+        if (skippedSamples.length < 3) {
+          skippedSamples.push(`${existing.nombre.split(',')[0]}: ${fIni}→${fFin} cruza ${conflicto.v.inicio}→${conflicto.v.fin}`);
+        }
+        return;
+      }
       existing.realVacations.push({
         inicio: fIni,
         fin: fFin,
@@ -833,6 +858,10 @@ function processingReal(rows, filename) {
 
   saveData(APP);
   showToast(`Gestión Real cargada para ${updated} consultores`, 'success');
+  if (skippedOverlaps > 0) {
+    const detail = skippedSamples.join(' | ');
+    showToast(`⚠️ ${skippedOverlaps} registros omitidos por superponer fechas existentes. ${detail}${skippedOverlaps > 3 ? '...' : ''}`, 'info');
+  }
   navigateTo('importar');
 }
 

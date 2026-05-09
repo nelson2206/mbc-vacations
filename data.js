@@ -260,6 +260,23 @@ function calcDiasGozadosReales(consultorId) {
     .reduce((sum, v) => sum + (v.dias || 0), 0);
 }
 
+// Detecta si un rango [inicio, fin] se cruza con alguna vacación existente
+// del mismo consultor. Devuelve la vacación conflictiva (con su índice) o null.
+// excludeIdx evita comparar contra el propio registro al editar.
+function findVacacionSuperpuesta(realVacations, inicio, fin, excludeIdx) {
+  if (!Array.isArray(realVacations) || !inicio || !fin) return null;
+  for (let i = 0; i < realVacations.length; i++) {
+    if (i === excludeIdx) continue;
+    const v = realVacations[i];
+    if (!v || !v.inicio || !v.fin) continue;
+    // Dos rangos se solapan si NO (fin < otroInicio OR inicio > otroFin)
+    if (!(fin < v.inicio || inicio > v.fin)) {
+      return { v, idx: i };
+    }
+  }
+  return null;
+}
+
 function calcDiasPlanificadosReales(consultorId) {
   const c = getConsultor(consultorId);
   if (!c || !c.realVacations) return 0;
