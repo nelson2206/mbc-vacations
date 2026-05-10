@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Recreo — Control de Vacaciones del Equipo</title>
+  <title>Recreo · Control de Vacaciones del Equipo</title>
   <meta name="description" content="Recreo: herramienta de control de vacaciones para equipos de consultoría en Perú. Cumplimiento normativo DL 713.">
   <meta name="theme-color" content="#4c111f">
 
@@ -17,25 +17,25 @@
 
   <!-- Open Graph (WhatsApp, Slack, Facebook, LinkedIn) -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Recreo — Control de Vacaciones del Equipo">
+  <meta property="og:title" content="Recreo · Control de Vacaciones del Equipo">
   <meta property="og:description" content="Herramienta de control de vacaciones para equipos de consultoría en Perú. Cumplimiento DL 713.">
   <meta property="og:image" content="https://nelson2206.github.io/mbc-vacations/assets/og-image.jpg?v=1">
   <meta property="og:image:secure_url" content="https://nelson2206.github.io/mbc-vacations/assets/og-image.jpg?v=1">
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Recreo — Control de vacaciones del equipo">
+  <meta property="og:image:alt" content="Recreo · Control de vacaciones del equipo">
   <meta property="og:site_name" content="Recreo">
   <meta property="og:url" content="https://nelson2206.github.io/mbc-vacations/">
   <meta property="og:locale" content="es_PE">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Recreo — Control de Vacaciones del Equipo">
+  <meta name="twitter:title" content="Recreo · Control de Vacaciones del Equipo">
   <meta name="twitter:description" content="Herramienta de control de vacaciones para equipos de consultoría en Perú. Cumplimiento DL 713.">
   <meta name="twitter:image" content="https://nelson2206.github.io/mbc-vacations/assets/og-image.jpg?v=1">
 
-  <link rel="stylesheet" href="styles.css?v=12">
+  <link rel="stylesheet" href="styles.css?v=14">
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   
   <!-- FIREBASE SDK -->
@@ -43,6 +43,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 </head>
 <body>
+  <a href="#mainContent" class="skip-link">Saltar al contenido</a>
   <!-- MOBILE HEADER -->
   <header class="mobile-header">
     <div style="display:flex; align-items:center; gap:10px">
@@ -58,7 +59,7 @@
       </svg>
       <strong style="font-size:1.15rem; letter-spacing:2px">RECREO</strong>
     </div>
-    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Abrir menú" aria-controls="sidebar" aria-expanded="false">☰</button>
   </header>
 
   <!-- SIDEBAR OVERLAY (mobile tap-to-close) -->
@@ -66,8 +67,8 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <h1 style="display:flex; align-items:center; gap:10px">
+    <div class="sidebar-brand" role="banner">
+      <p class="brand-mark">
         <svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true" style="flex-shrink:0">
           <circle cx="32" cy="22" r="6" fill="none" stroke="currentColor" stroke-width="3"/>
           <line x1="32" y1="10" x2="32" y2="13" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
@@ -79,8 +80,8 @@
           <path d="M12 40 Q32 58 52 40" fill="none" stroke="#e94e77" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <span>Recreo</span>
-      </h1>
-      <p>Control de Vacaciones</p>
+      </p>
+      <p class="brand-tag">Control de Vacaciones</p>
     </div>
     <nav class="sidebar-nav">
       <div class="sidebar-section">
@@ -123,11 +124,11 @@
   </main>
 
   <!-- MODALS -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal" id="modalContainer">
+  <div class="modal-overlay" id="modalOverlay" role="presentation">
+    <div class="modal" id="modalContainer" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="modal-header">
         <h3 id="modalTitle">Modal</h3>
-        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <button class="modal-close" onclick="closeModal()" aria-label="Cerrar modal">&times;</button>
       </div>
       <div class="modal-body" id="modalBody"></div>
       <div class="modal-footer" id="modalFooter"></div>
@@ -135,10 +136,16 @@
   </div>
 
   <!-- TOAST -->
-  <div class="toast-container" id="toastContainer"></div>
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
 
-  <script src="data.js?v=12"></script>
-  <script src="views.js?v=12"></script>
-  <script src="app.js?v=12"></script>
+  <!-- Skip link a contenido principal -->
+  <style>
+    .skip-link { position:absolute; left:-9999px; top:0; z-index:10000; }
+    .skip-link:focus { left:12px; top:12px; padding:10px 14px; background:#3d0d1a; color:#fff; border-radius:8px; }
+  </style>
+
+  <script src="data.js?v=14"></script>
+  <script src="views.js?v=14"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>

@@ -57,18 +57,18 @@ function renderDashboard() {
 
   function renderNegraCard(c) {
     const deuda = calcDiasGozadosGabin(c) - calcDiasGozadosReales(c.id);
-    return `<div class="risk-person-card risk-safe" onclick="verDetalleConsultor('${c.id}')" style="cursor:pointer; border-left: 4px solid var(--accent)">
+    return `<button type="button" class="risk-person-card risk-debt" onclick="verDetalleConsultor('${c.id}')">
       <div class="risk-avatar" style="background:var(--bg-panel); color:var(--accent)">${getInitials(c.nombre)}</div>
       <div class="risk-person-info">
         <div class="risk-person-name">${shortenName(c.nombre)}</div>
         <div class="risk-person-cargo">${c.vertical || c.cargo}</div>
-        <div style="font-size:0.65rem;margin-top:2px;color:var(--text-muted)"><strong>Deuda registrada</strong></div>
+        <div class="risk-person-meta">Deuda registrada</div>
       </div>
       <div class="risk-person-days">
-        <span class="risk-days-number" style="color:var(--accent)">+${Math.round(deuda)}</span>
+        <span class="risk-days-number risk-days-accent">+${Math.round(deuda)}</span>
         <span class="risk-days-label">días deuda</span>
       </div>
-    </div>`;
+    </button>`;
   }
 
   function renderRiskCard(c) {
@@ -82,7 +82,7 @@ function renderDashboard() {
       ? `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 8px;border-radius:10px;background:rgba(76,17,31,0.08);color:var(--bg-panel);font-size:0.65rem;font-weight:700">📅 ${Math.round(planificado)} días planificados</div>`
       : '';
 
-    return `<div class="risk-person-card risk-${cls}" onclick="verDetalleConsultor('${c.id}')" style="cursor:pointer">
+    return `<button type="button" class="risk-person-card risk-${cls}" onclick="verDetalleConsultor('${c.id}')">
       <div class="risk-avatar">${getInitials(c.nombre)}</div>
       <div class="risk-person-info">
         <div class="risk-person-name">${shortenName(c.nombre)}</div>
@@ -94,14 +94,14 @@ function renderDashboard() {
         <span class="risk-days-number">${disp}</span>
         <span class="risk-days-label">días Gabin</span>
       </div>
-    </div>`;
+    </button>`;
   }
 
   return `
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
       <div>
-        <h2>📊 Dashboard</h2>
-        <p>Resumen general del equipo — <strong style="color:var(--bg-panel)">${(function(){
+        <h1>📊 Dashboard</h1>
+        <p>Resumen general del equipo · <strong style="color:var(--bg-panel)">${(function(){
           const gabinImp = APP.importaciones && APP.importaciones.find(i => i.tipo === 'RRHH Gabin');
           const fn = gabinImp && gabinImp.archivo;
           if (fn) {
@@ -152,32 +152,32 @@ function renderDashboard() {
       </div>
     </div>
     
-    <div class="stats-grid">
-      <div class="card stat-card accent">
-        <div class="stat-icon">👥</div>
-        <div class="stat-value">${cons.length}</div>
-        <div class="stat-label">Consultores</div>
+    <section class="hero-strip" aria-label="Resumen del equipo">
+      <div class="stat-card lead">
+        <div class="stat-label">El equipo</div>
+        <div class="stat-value" data-numeric>${cons.length}</div>
+        <div class="stat-meta">consultores activos · ${Math.round(totalDias)} días pendientes</div>
       </div>
-      <div class="card stat-card success" onclick="mostrarEnVacacionesHoy()" style="cursor: pointer;" title="Ver lista de consultores en vacaciones hoy">
-        <div class="stat-icon">🏖️</div>
-        <div class="stat-value">${enVacHoy}</div>
-        <div class="stat-label">En vacaciones hoy</div>
+      <button type="button" class="stat-card compact stat-clickable" onclick="mostrarEnVacacionesHoy()" aria-label="Ver consultores en vacaciones hoy">
+        <div class="stat-label">Hoy fuera</div>
+        <div class="stat-value" data-numeric>${enVacHoy}</div>
+        <div class="stat-meta">de descanso</div>
+      </button>
+      <div class="stat-card compact ${criticos.length ? 'stat-tone-crit' : ''}">
+        <div class="stat-label">Crítico</div>
+        <div class="stat-value" data-numeric>${criticos.length}</div>
+        <div class="stat-meta">requieren acción</div>
       </div>
-      <div class="card stat-card warning">
-        <div class="stat-icon">📋</div>
-        <div class="stat-value">${Math.round(totalDias)}</div>
-        <div class="stat-label">Días pendientes (Gabin)</div>
+      <div class="stat-card compact ${medios.length ? 'stat-tone-warn' : ''}">
+        <div class="stat-label">Atención</div>
+        <div class="stat-value" data-numeric>${medios.length}</div>
+        <div class="stat-meta">programar pronto</div>
       </div>
-      <div class="card stat-card danger">
-        <div class="stat-icon">⚠️</div>
-        <div class="stat-value">${criticos.length + medios.length}</div>
-        <div class="stat-label">Alertas activas</div>
-      </div>
-    </div>
+    </section>
 
     <!-- ===== SEMÁFORO DE RIESGO ===== -->
     <div class="section slide-up">
-      <div class="section-title">🚦 Semáforo de Riesgo — Vacaciones por Vencer (DL 713 Art. 23)</div>
+      <div class="section-title">🚦 Semáforo de Riesgo · Vacaciones por Vencer (DL 713 Art. 23)</div>
       ${cons.length === 0 ?
         '<div class="card"><div class="empty-state"><div class="empty-icon">🚦</div><h4>Sin consultores</h4><p>Importa los archivos de RRHH para activar el semáforo</p></div></div>' :
         `<div class="risk-grid" style="align-items:start">
@@ -377,7 +377,7 @@ function renderConsultores() {
   const getSortIcon = (col) => consConfig.sortCol === col ? (consConfig.sortAsc ? ' 🔼' : ' 🔽') : '';
   return `
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
-      <div><h2><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:middle"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Base de Consultores</h2><p>Gestión del equipo de consultoría</p></div>
+      <div><h1><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:middle"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Base de Consultores</h1><p>Gestión del equipo de consultoría</p></div>
       <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
         <input type="text" id="filterConsGlobal" class="form-control" placeholder="🔍 Buscar consultor..." value="${consConfig.filter}" onchange="setConsFilter()" style="max-width:250px; padding:8px 14px; font-size:0.8rem;">
         <button class="btn btn-outline" onclick="openModalRegistroReal()" style="display:flex; align-items:center; gap:8px">
@@ -433,7 +433,7 @@ function renderConsultores() {
 function renderImportar() {
   return `
     <div class="page-header">
-      <h2>📤 Importación de Datos</h2>
+      <h1>📤 Importación de Datos</h1>
       <p>Carga los archivos mensuales de RRHH, Verticales y Gestión Real</p>
     </div>
     
@@ -524,7 +524,7 @@ function renderAlertas() {
   const ok = cons.filter(c => getAlertaLegal(c).nivel === 'ok');
 
   return `
-    <div class="page-header"><h2>⚠️ Alertas de Cumplimiento Legal</h2><p>Monitoreo de riesgos según DL 713 — Triple Vacacional</p></div>
+    <div class="page-header"><h1>⚠️ Alertas de Cumplimiento Legal</h1><p>Monitoreo de riesgos según DL 713 · Triple Vacacional</p></div>
     <div class="stats-grid">
       <div class="card stat-card danger"><div class="stat-icon">🔴</div><div class="stat-value">${criticos.length}</div><div class="stat-label">Riesgo Triple Vacacional</div></div>
       <div class="card stat-card warning"><div class="stat-icon">🟡</div><div class="stat-value">${warnings.length}</div><div class="stat-label">Requieren atención</div></div>
@@ -538,9 +538,9 @@ function renderAlertas() {
           return `<div class="alert-card ${al.nivel}" onclick="verDetalleConsultor('${c.id}')" style="cursor:pointer">
             <span class="alert-icon">${al.nivel==='critical'?'🔴':al.nivel==='warning'?'🟡':'🟢'}</span>
             <div class="alert-content">
-              <h4>${c.nombre} — ${c.cargo}</h4>
+              <h4>${c.nombre} · ${c.cargo}</h4>
               <p>${al.msg}</p>
-              <p class="legal-ref" style="margin-top:4px; opacity:0.6">Base legal: DL 713 Art. 23 — Indemnización por no goce de vacaciones</p>
+              <p class="legal-ref" style="margin-top:4px; opacity:0.6">Base legal: DL 713 Art. 23 · Indemnización por no goce de vacaciones</p>
             </div>
           </div>`;
         }).join('')}
@@ -552,7 +552,7 @@ function renderAlertas() {
 
 function renderReportes() {
   return `
-    <div class="page-header"><h2>📈 Reportes y Datos</h2><p>Exportación de datos y backup</p></div>
+    <div class="page-header"><h1>📈 Reportes y Datos</h1><p>Exportación de datos y backup</p></div>
     <div class="grid-3">
       <div class="card" style="text-align:center;padding:30px">
         <div style="font-size:2.5rem;margin-bottom:12px">📊</div>
@@ -777,7 +777,7 @@ function renderGestiones() {
   return `
     <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start">
       <div>
-        <h2><span style="font-size:24px; vertical-align:middle; margin-right:8px">⏱️</span>Gestión Real</h2>
+        <h1><span style="font-size:24px; vertical-align:middle; margin-right:8px">⏱️</span>Gestión Real</h1>
         <p>Listado general de salidas reales efectivas e importadas</p>
       </div>
       <div>
@@ -854,7 +854,7 @@ function renderConflictos() {
   if (totalPendientes === 0 && coberturaAprobada.length === 0) {
     return `
       <div class="page-header">
-        <h2><span style="font-size:24px; vertical-align:middle; margin-right:8px">⚠️</span>Conflictos de Vacaciones</h2>
+        <h1><span style="font-size:24px; vertical-align:middle; margin-right:8px">⚠️</span>Conflictos de Vacaciones</h1>
         <p>Revisa registros superpuestos y alertas de cobertura de liderazgo</p>
       </div>
       <div class="card">
@@ -978,7 +978,7 @@ function renderConflictos() {
         ${coberturaPendiente.length > 0 ? `<span style="background:#f59e0b;color:white;font-size:0.7rem;font-weight:800;padding:2px 9px;border-radius:10px">${coberturaPendiente.length} sin aprobar</span>` : ''}
       </div>
       <div style="padding:12px 16px;border-radius:10px;background:rgba(76,17,31,0.04);border:1px solid rgba(76,17,31,0.1);margin-bottom:14px;font-size:0.82rem;color:var(--text-on-light);line-height:1.5">
-        Cuando 3 o más Managers o Senior Managers de la misma vertical están de vacaciones en días que se cruzan, aparece una alerta. <strong>No bloquea ni borra nada</strong> — sólo te avisa para que decides aprobarlo (si la cobertura está cubierta) o gestionarlo.
+        Cuando 3 o más Managers o Senior Managers de la misma vertical están de vacaciones en días que se cruzan, aparece una alerta. <strong>No bloquea ni borra nada</strong> · sólo te avisa para que decides aprobarlo (si la cobertura está cubierta) o gestionarlo.
       </div>
       ${coberturaPendiente.map(renderCobertura).join('')}
       ${coberturaAprobada.length > 0 ? `
@@ -1004,7 +1004,7 @@ function renderConflictos() {
 
   return `
     <div class="page-header">
-      <h2><span style="font-size:24px; vertical-align:middle; margin-right:8px">⚠️</span>Conflictos de Vacaciones <span style="background:var(--accent);color:white;font-size:0.8rem;padding:3px 10px;border-radius:12px;margin-left:8px;vertical-align:middle">${totalPendientes}</span></h2>
+      <h1><span style="font-size:24px; vertical-align:middle; margin-right:8px">⚠️</span>Conflictos de Vacaciones <span style="background:var(--accent);color:white;font-size:0.8rem;padding:3px 10px;border-radius:12px;margin-left:8px;vertical-align:middle">${totalPendientes}</span></h1>
       <p>Cobertura de liderazgo y registros con fechas superpuestas</p>
     </div>
 
@@ -1052,7 +1052,7 @@ function renderAuditoria() {
 
   return `
     <div class="page-header">
-      <h2>🔍 Auditoría Senior QA</h2>
+      <h1>🔍 Auditoría Senior QA</h1>
       <p>Detección automática de inconsistencias y riesgos de compensación.</p>
     </div>
     

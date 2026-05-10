@@ -87,19 +87,68 @@ function updateConflictosBadge() {
   badge.style.display = count > 0 ? 'inline-flex' : 'none';
 }
 
+// ===== HTML escape helper (úsalo cuando interpoles datos en innerHTML) =====
+function esc(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ===== MODAL =====
+let _modalLastFocus = null;
 function openModal(title, bodyHtml, footerHtml, wide) {
+  _modalLastFocus = document.activeElement;
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalBody').innerHTML = bodyHtml;
   document.getElementById('modalFooter').innerHTML = footerHtml || '';
   const container = document.getElementById('modalContainer');
   container.className = wide ? 'modal wide' : 'modal';
   document.getElementById('modalOverlay').classList.add('active');
+  // Mover el foco al primer elemento interactivo del modal
+  setTimeout(() => {
+    const focusable = _modalFocusables();
+    if (focusable.length) focusable[0].focus();
+    else container.focus?.();
+  }, 50);
 }
 
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('active');
+  // Restaurar foco al disparador
+  if (_modalLastFocus && typeof _modalLastFocus.focus === 'function') {
+    _modalLastFocus.focus();
+  }
+  _modalLastFocus = null;
 }
+
+function _modalFocusables() {
+  const root = document.getElementById('modalContainer');
+  if (!root) return [];
+  return Array.from(root.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )).filter(el => el.offsetParent !== null);
+}
+
+// Focus trap: mientras el modal está abierto, Tab / Shift+Tab no se escapan
+document.addEventListener('keydown', e => {
+  const overlay = document.getElementById('modalOverlay');
+  if (!overlay || !overlay.classList.contains('active')) return;
+  if (e.key !== 'Tab') return;
+  const items = _modalFocusables();
+  if (!items.length) return;
+  const first = items[0], last = items[items.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
+});
 
 // ===== TOAST =====
 function showToast(msg, type) {
@@ -288,7 +337,7 @@ function editarVacacionReal(cid, idx) {
     <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
     <button class="btn btn-primary" onclick="guardarEdicionReal('${cid}', ${idx})">Guardar</button>
   `;
-  openModal(`Editar Vacación — ${c.nombre}`, body, footer);
+  openModal(`Editar Vacación · ${c.nombre}`, body, footer);
 }
 
 function guardarEdicionReal(cid, idx) {
@@ -340,7 +389,7 @@ function resolverConflicto(cid, idxKeep, idxRemove) {
       <span style="color:var(--text-muted);margin-left:8px">${remove.dias} días · ${remove.origen}</span>
     </div>`;
   openModal(
-    `Resolver conflicto — ${c.nombre}`,
+    `Resolver conflicto · ${c.nombre}`,
     body,
     `<button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
      <button class="btn btn-danger" onclick="confirmarResolverConflicto('${cid}', ${idxRemove})">Eliminar y conservar</button>`
@@ -998,7 +1047,7 @@ function verDatosImportacion(impId) {
     <button class="btn btn-outline" onclick="exportarImportacionCSV('${impId}')">📊 Exportar CSV</button>
     <button class="btn btn-primary" onclick="closeModal()">Cerrar</button>
   `;
-  openModal(`📂 Importación — ${imp.archivo}`, body, footer, true);
+  openModal(`📂 Importación · ${imp.archivo}`, body, footer, true);
 }
 
 function eliminarImportacion(impId) {
