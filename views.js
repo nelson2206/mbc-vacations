@@ -58,10 +58,10 @@ function renderDashboard() {
   function renderNegraCard(c) {
     const deuda = calcDiasGozadosGabin(c) - calcDiasGozadosReales(c.id);
     return `<button type="button" class="risk-person-card risk-debt" onclick="verDetalleConsultor('${c.id}')">
-      <div class="risk-avatar" style="background:var(--bg-panel); color:var(--accent)">${getInitials(c.nombre)}</div>
+      <div class="risk-avatar" style="background:var(--bg-panel); color:var(--accent)">${esc(getInitials(c.nombre))}</div>
       <div class="risk-person-info">
-        <div class="risk-person-name">${shortenName(c.nombre)}</div>
-        <div class="risk-person-cargo">${c.vertical || c.cargo}</div>
+        <div class="risk-person-name">${esc(shortenName(c.nombre))}</div>
+        <div class="risk-person-cargo">${esc(c.vertical || c.cargo)}</div>
         <div class="risk-person-meta">Deuda registrada</div>
       </div>
       <div class="risk-person-days">
@@ -76,17 +76,16 @@ function renderDashboard() {
     const planificado = calcDiasPlanificadosReales(c.id);
     const al = getAlertaLegal(c);
     const cls = al.nivel === 'critical' ? 'crit' : al.nivel === 'warning' ? 'warn' : 'safe';
-    const colors = { crit: '#ef4444', warn: '#f59e0b', safe: '#10b981' };
-    const fechaMax = c.fechaMaxGabin ? `<div style="font-size:0.65rem;margin-top:2px;color:var(--text-muted)">Max Gabin: <strong>${c.fechaMaxGabin}</strong></div>` : '';
+    const fechaMax = c.fechaMaxGabin ? `<div style="font-size:0.65rem;margin-top:2px;color:var(--text-muted)">Max Gabin: <strong>${esc(c.fechaMaxGabin)}</strong></div>` : '';
     const planTag = planificado > 0
-      ? `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 8px;border-radius:10px;background:rgba(76,17,31,0.08);color:var(--bg-panel);font-size:0.65rem;font-weight:700">📅 ${Math.round(planificado)} días planificados</div>`
+      ? `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 8px;border-radius:10px;background:var(--brand-tint-8);color:var(--bg-panel);font-size:0.65rem;font-weight:700">📅 ${Math.round(planificado)} días planificados</div>`
       : '';
 
     return `<button type="button" class="risk-person-card risk-${cls}" onclick="verDetalleConsultor('${c.id}')">
-      <div class="risk-avatar">${getInitials(c.nombre)}</div>
+      <div class="risk-avatar">${esc(getInitials(c.nombre))}</div>
       <div class="risk-person-info">
-        <div class="risk-person-name">${shortenName(c.nombre)}</div>
-        <div class="risk-person-cargo">${c.vertical || c.cargo}</div>
+        <div class="risk-person-name">${esc(shortenName(c.nombre))}</div>
+        <div class="risk-person-cargo">${esc(c.vertical || c.cargo)}</div>
         ${fechaMax}
         ${planTag}
       </div>
@@ -128,21 +127,21 @@ function renderDashboard() {
               style="
                 padding: 7px 16px;
                 border-radius: 8px;
-                border: 1.5px solid ${isActive ? 'var(--bg-panel)' : 'rgba(76,17,31,0.15)'};
+                border: 1.5px solid ${isActive ? 'var(--bg-panel)' : 'var(--brand-tint-15)'};
                 background: ${isActive ? 'var(--bg-panel)' : 'white'};
                 color: ${isActive ? 'white' : 'var(--text-on-light)'};
                 font-size: 0.78rem;
                 font-weight: ${isActive ? '700' : '500'};
                 cursor: pointer;
                 transition: all 0.18s ease;
-                box-shadow: ${isActive ? '0 3px 10px rgba(76,17,31,0.25)' : '0 1px 3px rgba(0,0,0,0.06)'};
+                box-shadow: ${isActive ? '0 3px 10px var(--brand-tint-25)' : '0 1px 3px rgba(0,0,0,0.06)'};
                 display: flex;
                 align-items: center;
                 gap: 6px;
                 white-space: nowrap;
               "
-              onmouseover="if(!${isActive})this.style.borderColor='var(--bg-panel)';this.style.background=!${isActive}?'rgba(76,17,31,0.05)':this.style.background"
-              onmouseout="if(!${isActive}){this.style.borderColor='rgba(76,17,31,0.15)';this.style.background='white'}"
+              onmouseover="if(!${isActive})this.style.borderColor='var(--bg-panel)';this.style.background=!${isActive}?'var(--brand-tint-5)':this.style.background"
+              onmouseout="if(!${isActive}){this.style.borderColor='var(--brand-tint-15)';this.style.background='white'}"
             >
               ${isActive ? '<span style="width:6px;height:6px;border-radius:50%;background:white;display:inline-block;flex-shrink:0"></span>' : ''}
               ${v === 'Todos' ? 'Todas las verticales' : v.replace(/Consultor[ií]a\s*/gi, '').trim() || v}
@@ -223,7 +222,7 @@ function renderDashboard() {
 
           <!-- VACACIONES NEGRAS -->
           <div class="risk-column risk-col-safe" style="border-top-color: var(--accent);">
-            <div class="risk-column-header risk-header-safe" style="background: rgba(76, 17, 31, 0.05); color: var(--accent);">
+            <div class="risk-column-header risk-header-safe" style="background: var(--brand-tint-5); color: var(--accent);">
               <div class="risk-header-icon" style="background: var(--accent); color: white;">🖤</div>
               <div class="risk-header-text">
                 <h4 style="color: var(--accent);">Vacaciones Negras</h4>
@@ -315,8 +314,8 @@ function renderDashboard() {
               const al = getAlertaLegal(c);
               const cls = al.nivel === 'critical' ? 'red' : al.nivel === 'warning' ? 'yellow' : 'green';
               return `<tr onclick="verDetalleConsultor('${c.id}')" style="cursor:pointer; height:80px">
-                <td style="padding:15px 20px"><strong>${shortenName(c.nombre)}</strong></td>
-                <td><span style="color:var(--text-muted);font-size:0.85rem">${c.fechaMaxGabin || '—'}</span></td>
+                <td style="padding:15px 20px"><strong>${esc(shortenName(c.nombre))}</strong></td>
+                <td><span style="color:var(--text-muted);font-size:0.85rem">${esc(c.fechaMaxGabin) || '—'}</span></td>
                 <td><strong style="font-size:1.1rem">${Math.round(dispGabin)}</strong></td>
                 <td><span style="color:var(--text-muted); font-size:1rem">${truncosDisplay}</span></td>
                 <td><span style="color:var(--bg-panel); font-weight:700">${Math.round(gozGabin)}</span></td>
@@ -408,19 +407,19 @@ function renderConsultores() {
           const al = getAlertaLegal(c);
           const cls = al.nivel==='critical'?'red':al.nivel==='warning'?'yellow':'green';
           return `<tr style="${c.estado==='cesado'?'opacity:0.5':''}">
-            <td><strong style="color:var(--bg-panel)">${c.nombre}</strong></td>
+            <td><strong style="color:var(--bg-panel)">${esc(c.nombre)}</strong></td>
             <td><span style="color:var(--text-muted);font-size:0.85rem">${c.cargo || 'Consultor'}</span></td>
-            <td>${c.fechaIngreso}</td>
+            <td>${esc(c.fechaIngreso)}</td>
             <td>${ant.years}a ${ant.months}m</td>
             <td>${c.diasPendientesHR || '—'}</td>
             <td><strong style="font-size:1.1rem">${Math.round(disp)}</strong></td>
             <td><span class="status ${cls}" style="padding:6px 12px; font-size:0.75rem">${al.nivel==='critical'?'Crítico':al.nivel==='warning'?'Atención':'OK'}</span></td>
             <td style="text-align:right">
               <div style="display:flex; gap:8px; justify-content:flex-end">
-                <button class="btn btn-outline btn-sm" onclick="openModalConsultor('${c.id}')" title="Editar" style="padding:6px; border-color:transparent; background:rgba(76,17,31,0.05); color:var(--bg-panel)">
+                <button class="btn btn-outline btn-sm btn-edit-soft" onclick="openModalConsultor('${c.id}')" title="Editar" aria-label="Editar">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                 </button>
-                <button class="btn btn-outline btn-sm" onclick="confirmarEliminar('${c.id}','${c.nombre}')" title="Eliminar" style="padding:6px; border-color:transparent; background:rgba(220,38,38,0.1); color:#dc2626">
+                <button class="btn btn-outline btn-sm btn-danger-soft" onclick="confirmarEliminar('${c.id}','${esc(c.nombre)}')" title="Eliminar" aria-label="Eliminar">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
               </div>
@@ -538,7 +537,7 @@ function renderAlertas() {
           return `<div class="alert-card ${al.nivel}" onclick="verDetalleConsultor('${c.id}')" style="cursor:pointer">
             <span class="alert-icon">${al.nivel==='critical'?'🔴':al.nivel==='warning'?'🟡':'🟢'}</span>
             <div class="alert-content">
-              <h4>${c.nombre} · ${c.cargo}</h4>
+              <h4>${esc(c.nombre)} · ${esc(c.cargo)}</h4>
               <p>${al.msg}</p>
               <p class="legal-ref" style="margin-top:4px; opacity:0.6">Base legal: DL 713 Art. 23 · Indemnización por no goce de vacaciones</p>
             </div>
@@ -594,37 +593,37 @@ function verDetalleConsultor(id) {
       <div class="card" style="padding:25px;background:var(--bg-panel-alt);border:none">
         <h4 style="margin-bottom:15px;color:var(--bg-panel);font-size:1.1rem;display:flex;align-items:center;gap:10px">📋 <span>Expediente Base</span></h4>
         <div style="display:grid;grid-template-columns:1fr;gap:15px;font-size:0.95rem">
-          <div><span style="color:var(--text-muted);font-size:0.8rem;font-weight:600">Nombre Completo</span><br><strong>${c.nombre}</strong></div>
-          <div><span style="color:var(--text-muted);font-size:0.8rem;font-weight:600">ID RRHH (Gabin)</span><br><strong>${c.idGabin || '—'}</strong></div>
+          <div><span style="color:var(--text-muted);font-size:0.8rem;font-weight:600">Nombre Completo</span><br><strong>${esc(c.nombre)}</strong></div>
+          <div><span style="color:var(--text-muted);font-size:0.8rem;font-weight:600">ID RRHH (Gabin)</span><br><strong>${esc(c.idGabin) || '—'}</strong></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div><span style="color:var(--text-muted);font-size:0.8rem;font-weight:600">Fecha Ingreso</span><br><strong>${c.fechaIngreso}</strong></div>
+            <div><span style="color:var(--text-muted);font-size:0.8rem;font-weight:600">Fecha Ingreso</span><br><strong>${esc(c.fechaIngreso)}</strong></div>
             <div><span style="color:var(--text-muted);font-size:0.8rem;font-weight:600">Antigüedad</span><br><strong>${ant.years}a ${ant.months}m</strong></div>
           </div>
           <div><span style="color:var(--text-muted);font-size:0.8rem;font-weight:600">Vertical / Equipo</span><br><strong>${c.vertical || 'Sin asignar'}</strong></div>
-          <div><span style="color:var(--text-muted);font-size:0.8rem;font-weight:600">Cargo Actual</span><br><strong>${c.cargo}</strong></div>
+          <div><span style="color:var(--text-muted);font-size:0.8rem;font-weight:600">Cargo Actual</span><br><strong>${esc(c.cargo)}</strong></div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;margin-top:20px;padding-top:15px;border-top:1px solid rgba(0,0,0,0.05)">
           <div><span style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase">Pendientes (Gabin)</span><br><strong style="font-size:1.2rem;color:var(--bg-panel)">${c.diasPendientesHR || 0}</strong></div>
           <div><span style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase">Truncos (Gabin)</span><br><strong style="font-size:1.2rem;color:var(--bg-panel)">${c.diasTruncos || 0}</strong></div>
-          <div><span style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase">Fecha Max (Gabin)</span><br><strong style="font-size:1.1rem;color:var(--accent)">${c.fechaMaxGabin || '—'}</strong></div>
+          <div><span style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase">Fecha Max (Gabin)</span><br><strong style="font-size:1.1rem;color:var(--accent)">${esc(c.fechaMaxGabin) || '—'}</strong></div>
         </div>
       </div>
       
       <div class="card" style="padding:25px;background:white;border:2px solid var(--bg-panel-alt)">
         <h4 style="margin-bottom:20px;color:var(--bg-panel);font-size:1.1rem;display:flex;align-items:center;gap:10px">⚖️ <span>Conciliación: Días Gozados</span></h4>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center;margin-bottom:25px">
-          <div style="padding:20px;border-radius:15px;background:rgba(76, 17, 31, 0.03);border:1px solid rgba(76, 17, 31, 0.1)">
+          <div style="padding:20px;border-radius:15px;background:var(--brand-tint-3);border:1px solid var(--brand-tint-10)">
             <span style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase">Oficial (Gabin)</span><br>
             <strong style="font-size:2.4rem;color:var(--bg-panel)">${Math.round(gozGabin)}</strong> <span style="font-size:0.9rem">días</span>
           </div>
-          <div style="padding:20px;border-radius:15px;background:rgba(233, 78, 119, 0.03);border:1px solid rgba(233, 78, 119, 0.1)">
+          <div style="padding:20px;border-radius:15px;background:var(--accent-tint-3);border:1px solid var(--accent-tint-10)">
             <span style="color:var(--text-muted);font-size:0.8rem;font-weight:600;text-transform:uppercase">Real (Gestión)</span><br>
             <strong style="font-size:2.4rem;color:var(--accent)">${Math.round(gozReal)}</strong> <span style="font-size:0.9rem">días</span>
             ${planificado > 0 ? `<div style="margin-top:8px;font-size:0.8rem;color:var(--text-muted)">+ <strong style="color:var(--bg-panel)">${Math.round(planificado)} días planificados</strong> (no suman)</div>` : ''}
           </div>
         </div>
         
-        <div style="padding:15px;border-radius:12px;background:${gozGabin === gozReal ? 'rgba(16,185,129,0.1)' : 'rgba(233, 78, 119, 0.1)'};text-align:center">
+        <div class="callout ${gozGabin === gozReal ? 'callout-ok' : 'callout-debt'}" style="padding:15px;text-align:center">
           <span style="font-size:1rem;font-weight:700;color:${gozGabin === gozReal ? 'var(--success)' : 'var(--accent)'}">
             ${gozGabin === gozReal ? '✅ Saldos perfectamente conciliados' : 
               gozGabin > gozReal ? `⚠️ Deuda Interna: ${Math.round((gozGabin - gozReal)*100)/100} días por no goce real` : 
@@ -643,17 +642,17 @@ function verDetalleConsultor(id) {
           <tbody>${realVacs.map((v, idx) => {
             const planif = esVacacionPlanificada(v);
             return `
-            <tr style="${planif ? 'background:rgba(76, 17, 31, 0.025)' : ''}">
-              <td style="padding:15px"><strong>${v.inicio}</strong> ${planif ? '<span class="status yellow" style="margin-left:6px;padding:2px 8px;font-size:0.7rem">📅 Planificado</span>' : ''}</td>
-              <td><strong>${v.fin}</strong></td>
+            <tr style="${planif ? 'background:var(--brand-tint-3)' : ''}">
+              <td style="padding:15px"><strong>${esc(v.inicio)}</strong> ${planif ? '<span class="status yellow" style="margin-left:6px;padding:2px 8px;font-size:0.7rem">📅 Planificado</span>' : ''}</td>
+              <td><strong>${esc(v.fin)}</strong></td>
               <td><span class="status ${planif ? 'yellow' : 'green'}" style="font-size:1rem;padding:5px 12px">${v.dias} días</span></td>
               <td><span style="color:var(--text-muted);font-size:0.8rem">${v.origen === 'Manual' ? 'Manual' : 'Importación Real'}</span></td>
               <td style="text-align:right; padding-right:15px">
                 <div style="display:flex; gap:8px; justify-content:flex-end">
-                  <button class="btn btn-outline btn-sm" onclick="editarVacacionReal('${c.id}', ${idx})" title="Editar" style="padding:4px 8px; border-color:transparent; background:rgba(76,17,31,0.05); color:var(--bg-panel)">
+                  <button class="btn btn-outline btn-sm btn-edit-soft" onclick="editarVacacionReal('${c.id}', ${idx})" title="Editar" aria-label="Editar">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                   </button>
-                  <button class="btn btn-outline btn-sm" onclick="eliminarVacacionReal('${c.id}', ${idx})" title="Eliminar" style="padding:4px 8px; border-color:transparent; background:rgba(220,38,38,0.1); color:#dc2626">
+                  <button class="btn btn-outline btn-sm btn-danger-soft" onclick="eliminarVacacionReal('${c.id}', ${idx})" title="Eliminar" aria-label="Eliminar">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>
                 </div>
@@ -663,13 +662,13 @@ function verDetalleConsultor(id) {
         </table></div>`}
     </div>
 
-    <div style="margin-top:25px;padding:18px;background:rgba(76, 17, 31, 0.03);border-radius:12px;font-size:0.85rem;color:var(--text-on-light);line-height:1.6;border:1px solid rgba(76, 17, 31, 0.05)">
+    <div style="margin-top:25px;padding:18px;background:var(--brand-tint-3);border-radius:12px;font-size:0.85rem;color:var(--text-on-light);line-height:1.6;border:1px solid var(--brand-tint-5)">
       <p><strong>🚨 Nota de Cumplimiento:</strong> El Saldo Oficial (Gabin) indica que la fecha límite legal para goce es el <strong>${c.fechaMaxGabin || 'Pendiente de cálculo'}</strong>. 
       Cualquier discrepancia positiva (Días Reales > Gabin) debe ser gestionada como deuda interna para evitar riesgos de clima laboral.</p>
     </div>
   `;
 
-  openModal(`Auditoría de Consultor: ${c.nombre}`, body, `<button class="btn btn-primary" style="padding:12px 30px" onclick="closeModal()">Cerrar Auditoría</button>`, true);
+  openModal(`Auditoría de Consultor: ${esc(c.nombre)}`, body, `<button class="btn btn-primary" style="padding:12px 30px" onclick="closeModal()">Cerrar Auditoría</button>`, true);
 }
 
 // Global function for filtering the reconciliation table
@@ -721,10 +720,10 @@ window.mostrarEnVacacionesHoy = function() {
         <tbody>
           ${vacsHoy.map(item => `
             <tr>
-              <td style="padding:15px"><strong>${item.c.nombre}</strong></td>
-              <td><span style="color:var(--text-muted);font-size:0.85rem">${item.c.vertical || '—'}</span></td>
-              <td><strong>${item.v.inicio}</strong></td>
-              <td><strong>${item.v.fin}</strong></td>
+              <td style="padding:15px"><strong>${esc(item.c.nombre)}</strong></td>
+              <td><span style="color:var(--text-muted);font-size:0.85rem">${esc(item.c.vertical) || '—'}</span></td>
+              <td><strong>${esc(item.v.inicio)}</strong></td>
+              <td><strong>${esc(item.v.fin)}</strong></td>
               <td><span class="status green" style="padding:4px 10px">${item.v.dias} días</span></td>
             </tr>
           `).join('')}
@@ -789,11 +788,11 @@ function renderGestiones() {
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px">
-      <div style="padding:18px;border-radius:12px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2)">
+      <div class="callout callout-ok" style="padding:18px">
         <span style="color:var(--text-muted);font-size:0.78rem;font-weight:600;text-transform:uppercase">Total Ejecutado</span><br>
         <strong style="font-size:1.8rem;color:var(--success)">${totalEjecutado}</strong> <span style="font-size:0.85rem;color:var(--text-muted)">días gozados (suman al gozReal)</span>
       </div>
-      <div style="padding:18px;border-radius:12px;background:rgba(76, 17, 31, 0.04);border:1px solid rgba(76, 17, 31, 0.15)">
+      <div class="callout" style="padding:18px">
         <span style="color:var(--text-muted);font-size:0.78rem;font-weight:600;text-transform:uppercase">Total Planificado</span><br>
         <strong style="font-size:1.8rem;color:var(--bg-panel)">${totalPlanificado}</strong> <span style="font-size:0.85rem;color:var(--text-muted)">días futuros (no suman al total)</span>
       </div>
@@ -817,20 +816,20 @@ function renderGestiones() {
           </thead>
           <tbody>
             ${allVacs.map(item => `
-              <tr style="${item.planificada ? 'background:rgba(76, 17, 31, 0.025)' : ''}">
-                <td><strong style="color:var(--bg-panel)">${item.c.nombre}</strong></td>
-                <td><span style="color:var(--text-muted);font-size:0.85rem">${item.c.vertical || item.c.cargo}</span></td>
-                <td><strong>${item.v.inicio}</strong></td>
-                <td><strong>${item.v.fin}</strong></td>
+              <tr style="${item.planificada ? 'background:var(--brand-tint-3)' : ''}">
+                <td><strong style="color:var(--bg-panel)">${esc(item.c.nombre)}</strong></td>
+                <td><span style="color:var(--text-muted);font-size:0.85rem">${esc(item.c.vertical || item.c.cargo)}</span></td>
+                <td><strong>${esc(item.v.inicio)}</strong></td>
+                <td><strong>${esc(item.v.fin)}</strong></td>
                 <td><span class="status ${item.planificada ? 'yellow' : 'green'}" style="padding:4px 10px">${item.v.dias} días</span></td>
                 <td><span class="status ${item.planificada ? 'yellow' : 'green'}" style="padding:4px 10px;font-size:0.78rem">${item.planificada ? '📅 Planificado' : '✅ Ejecutado'}</span></td>
-                <td><span style="color:var(--text-muted);font-size:0.8rem">${item.v.origen}</span></td>
+                <td><span style="color:var(--text-muted);font-size:0.8rem">${esc(item.v.origen)}</span></td>
                 <td style="text-align:right">
                   <div style="display:flex; gap:8px; justify-content:flex-end">
-                    <button class="btn btn-outline btn-sm" onclick="editarVacacionReal('${item.c.id}', ${item.idx})" title="Editar" style="padding:6px; border-color:transparent; background:rgba(76,17,31,0.05); color:var(--bg-panel)">
+                    <button class="btn btn-outline btn-sm btn-edit-soft" onclick="editarVacacionReal('${item.c.id}', ${item.idx})" title="Editar" aria-label="Editar">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                     </button>
-                    <button class="btn btn-outline btn-sm" onclick="eliminarVacacionReal('${item.c.id}', ${item.idx})" title="Eliminar" style="padding:6px; border-color:transparent; background:rgba(220,38,38,0.1); color:#dc2626">
+                    <button class="btn btn-outline btn-sm btn-danger-soft" onclick="eliminarVacacionReal('${item.c.id}', ${item.idx})" title="Eliminar" aria-label="Eliminar">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
                   </div>
@@ -891,8 +890,8 @@ function renderConflictos() {
           <strong style="font-size:0.7rem;letter-spacing:0.1em;color:var(--text-muted);text-transform:uppercase">Opción ${label}</strong>
           ${tag}
         </div>
-        <div style="font-size:1.05rem;margin-bottom:4px"><strong>${v.inicio}</strong> → <strong>${v.fin}</strong></div>
-        <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px">${v.dias} día${v.dias === 1 ? '' : 's'} · ${v.origen}</div>
+        <div style="font-size:1.05rem;margin-bottom:4px"><strong>${esc(v.inicio)}</strong> → <strong>${esc(v.fin)}</strong></div>
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px">${v.dias} día${v.dias === 1 ? '' : 's'} · ${esc(v.origen)}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-primary btn-sm" onclick="resolverConflicto('${side.cid}', ${side.idx}, ${side.otherIdx})" style="flex:1;padding:8px 10px;font-size:0.78rem">Conservar esta</button>
           <button class="btn btn-outline btn-sm" onclick="editarVacacionReal('${side.cid}', ${side.idx})" title="Editar fechas" style="padding:8px 10px;font-size:0.78rem">✏️ Editar</button>
@@ -909,7 +908,7 @@ function renderConflictos() {
       const overlapStart = k.a.v.inicio > k.b.v.inicio ? k.a.v.inicio : k.b.v.inicio;
       const overlapEnd = k.a.v.fin < k.b.v.fin ? k.a.v.fin : k.b.v.fin;
       return `
-        <div style="padding:18px;border-radius:14px;background:rgba(233,78,119,0.04);border:1px solid rgba(233,78,119,0.2);${i > 0 ? 'margin-top:14px' : ''}">
+        <div style="padding:18px;border-radius:14px;background:var(--accent-tint-4);border:1px solid var(--accent-tint-20);${i > 0 ? 'margin-top:14px' : ''}">
           <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <span style="font-size:0.7rem;font-weight:800;letter-spacing:0.08em;color:var(--accent);text-transform:uppercase">Conflicto ${i+1}</span>
             <span style="font-size:0.78rem;color:var(--text-muted)">→ se cruzan en <strong style="color:var(--bg-panel)">${overlapStart}</strong> a <strong style="color:var(--bg-panel)">${overlapEnd}</strong></span>
@@ -926,8 +925,8 @@ function renderConflictos() {
       <div class="card" style="margin-bottom:18px">
         <div style="padding:18px 22px 14px;border-bottom:1px solid var(--bg-panel-alt);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
           <div>
-            <div style="font-size:1.1rem;font-weight:800;color:var(--bg-panel)">${c.nombre}</div>
-            <div style="font-size:0.8rem;color:var(--text-muted)">${c.vertical || c.cargo}</div>
+            <div style="font-size:1.1rem;font-weight:800;color:var(--bg-panel)">${esc(c.nombre)}</div>
+            <div style="font-size:0.8rem;color:var(--text-muted)">${esc(c.vertical || c.cargo)}</div>
           </div>
           <button class="btn btn-outline btn-sm" onclick="verDetalleConsultor('${c.id}')" style="padding:6px 14px;font-size:0.78rem">Ver perfil completo</button>
         </div>
@@ -945,11 +944,11 @@ function renderConflictos() {
       return Math.round((b - a) / 86400000) + 1;
     })();
     return `
-      <div style="padding:18px;border-radius:14px;background:${w.aprobado ? 'rgba(16,185,129,0.05)' : 'rgba(245,158,11,0.06)'};border:1px solid ${w.aprobado ? 'rgba(16,185,129,0.25)' : 'rgba(245,158,11,0.3)'};margin-bottom:14px">
+      <div class="callout ${w.aprobado ? 'callout-ok' : 'callout-warn'}" style="margin-bottom:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
           <div>
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">
-              <span style="font-size:0.7rem;font-weight:800;letter-spacing:0.08em;color:${w.aprobado ? 'var(--success)' : '#b45309'};text-transform:uppercase">${w.aprobado ? '✓ Aprobado · Cobertura' : '⚠️ Cobertura de liderazgo'}</span>
+              <span style="font-size:0.7rem;font-weight:800;letter-spacing:0.08em;color:var(${w.aprobado ? '--status-ok' : '--status-warn'});text-transform:uppercase">${w.aprobado ? '✓ Aprobado · Cobertura' : '⚠️ Cobertura de liderazgo'}</span>
               <span style="font-size:0.78rem;color:var(--text-muted)">${w.miembros.length} líderes en <strong style="color:var(--bg-panel)">${w.vertical}</strong></span>
             </div>
             <div style="font-size:1rem"><strong>${w.inicio}</strong> → <strong>${w.fin}</strong> <span style="color:var(--text-muted);font-size:0.85rem">(${dias} día${dias === 1 ? '' : 's'})</span></div>
@@ -963,8 +962,8 @@ function renderConflictos() {
         <div style="display:flex;flex-wrap:wrap;gap:8px">
           ${w.miembros.map(m => `
             <div onclick="verDetalleConsultor('${m.c.id}')" style="cursor:pointer;padding:8px 14px;border-radius:10px;background:white;border:1px solid var(--bg-panel-alt);font-size:0.85rem">
-              <strong style="color:var(--bg-panel)">${shortenName(m.c.nombre)}</strong>
-              <span style="color:var(--text-muted);margin-left:6px;font-size:0.78rem">${m.c.cargo || '—'}</span>
+              <strong style="color:var(--bg-panel)">${esc(shortenName(m.c.nombre))}</strong>
+              <span style="color:var(--text-muted);margin-left:6px;font-size:0.78rem">${esc(m.c.cargo) || '—'}</span>
               ${m.v ? `<span style="color:var(--text-muted);margin-left:6px;font-size:0.75rem">· ${m.v.inicio}→${m.v.fin}</span>` : ''}
             </div>`).join('')}
         </div>
@@ -975,9 +974,9 @@ function renderConflictos() {
     <div class="section" style="margin-top:8px">
       <div class="section-title" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span>🎯 Cobertura de Liderazgo</span>
-        ${coberturaPendiente.length > 0 ? `<span style="background:#f59e0b;color:white;font-size:0.7rem;font-weight:800;padding:2px 9px;border-radius:10px">${coberturaPendiente.length} sin aprobar</span>` : ''}
+        ${coberturaPendiente.length > 0 ? `<span class="tag-pending">${coberturaPendiente.length} sin aprobar</span>` : ''}
       </div>
-      <div style="padding:12px 16px;border-radius:10px;background:rgba(76,17,31,0.04);border:1px solid rgba(76,17,31,0.1);margin-bottom:14px;font-size:0.82rem;color:var(--text-on-light);line-height:1.5">
+      <div style="padding:12px 16px;border-radius:10px;background:var(--brand-tint-4);border:1px solid var(--brand-tint-10);margin-bottom:14px;font-size:0.82rem;color:var(--text-on-light);line-height:1.5">
         Cuando 3 o más Managers o Senior Managers de la misma vertical están de vacaciones en días que se cruzan, aparece una alerta. <strong>No bloquea ni borra nada</strong> · sólo te avisa para que decides aprobarlo (si la cobertura está cubierta) o gestionarlo.
       </div>
       ${coberturaPendiente.map(renderCobertura).join('')}
@@ -995,7 +994,7 @@ function renderConflictos() {
         <span>📅 Fechas Superpuestas</span>
         <span style="background:var(--accent);color:white;font-size:0.7rem;font-weight:800;padding:2px 9px;border-radius:10px">${conflictos.length}</span>
       </div>
-      <div style="padding:12px 16px;border-radius:10px;background:rgba(76,17,31,0.04);border:1px solid rgba(76,17,31,0.12);margin-bottom:14px;font-size:0.82rem;color:var(--text-on-light);line-height:1.5">
+      <div style="padding:12px 16px;border-radius:10px;background:var(--brand-tint-4);border:1px solid var(--brand-tint-12);margin-bottom:14px;font-size:0.82rem;color:var(--text-on-light);line-height:1.5">
         <strong>💡 Cómo resolver:</strong> usa <em>Conservar esta</em> para borrar el otro registro, o <em>✏️ Editar</em> para ajustar las fechas. La validación de superposición bloqueará el guardado si las nuevas fechas siguen chocando.
       </div>
       ${tarjetas}

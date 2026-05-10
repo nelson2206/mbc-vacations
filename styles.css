@@ -47,6 +47,20 @@
   --border-soft: rgba(61,13,26,0.06);
   --border-strong: rgba(61,13,26,0.18);
 
+  /* ── Brand tints (graduated alpha of bg-panel & accent for inline use) ── */
+  --brand-tint-3:   rgba(76, 17, 31, 0.03);
+  --brand-tint-4:   rgba(76, 17, 31, 0.04);
+  --brand-tint-5:   rgba(76, 17, 31, 0.05);
+  --brand-tint-8:   rgba(76, 17, 31, 0.08);
+  --brand-tint-10:  rgba(76, 17, 31, 0.10);
+  --brand-tint-12:  rgba(76, 17, 31, 0.12);
+  --brand-tint-15:  rgba(76, 17, 31, 0.15);
+  --brand-tint-25:  rgba(76, 17, 31, 0.25);
+  --accent-tint-3:  rgba(233, 78, 119, 0.03);
+  --accent-tint-4:  rgba(233, 78, 119, 0.04);
+  --accent-tint-10: rgba(233, 78, 119, 0.10);
+  --accent-tint-20: rgba(233, 78, 119, 0.20);
+
   --sidebar-width: 270px;
   --radius-sm: 10px;
   --radius-md: 16px;
@@ -541,7 +555,15 @@ select.form-control {
   color: white;
 }
 
-.btn-sm { padding: 7px 14px; font-size: 0.78rem; }
+.btn-sm {
+  padding: 9px 14px;
+  font-size: 0.78rem;
+  min-height: 36px;
+}
+@media (max-width: 768px) {
+  .btn-sm { padding: 11px 16px; min-height: 44px; }
+  .btn-danger-soft, .btn-edit-soft { min-height: 44px; min-width: 44px; padding: 10px 12px; }
+}
 .btn-group { display: flex; gap: 8px; }
 
 /* ===== MODAL ===== */
@@ -968,14 +990,15 @@ select.form-control {
   left: 0;
   top: 50%;
   width: 3px;
-  height: 0;
+  height: 60%;
   background: var(--accent);
   border-radius: 0 3px 3px 0;
-  transform: translateY(-50%);
-  transition: height var(--dur-medium) var(--ease-spring);
+  transform: translateY(-50%) scaleY(0);
+  transform-origin: center;
+  transition: transform var(--dur-medium) var(--ease-spring);
 }
 .nav-item.active::before {
-  height: 60%;
+  transform: translateY(-50%) scaleY(1);
 }
 .nav-item:hover {
   transform: translateX(2px);
@@ -989,8 +1012,7 @@ select.form-control {
               opacity var(--dur-medium) var(--ease-out-expo);
 }
 .modal-overlay {
-  transition: opacity var(--dur-medium) var(--ease-out-expo),
-              backdrop-filter var(--dur-medium) var(--ease-out-expo);
+  transition: opacity var(--dur-medium) var(--ease-out-expo);
 }
 
 /* === Toast: smoother slide-in === */
@@ -1250,4 +1272,60 @@ body { background: var(--bg-base); }
   letter-spacing: -0.025em;
   line-height: 1.1;
   color: var(--bg-panel);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   UTILITY CLASSES — replace inline hex/rgba in views.js
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Danger-soft button: small destructive action (eliminar) */
+.btn-danger-soft {
+  background: var(--status-crit-bg);
+  color: var(--status-crit);
+  border-color: transparent;
+  padding: 8px 10px;
+  min-height: 36px;
+  min-width: 36px;
+}
+.btn-danger-soft:hover {
+  background: var(--status-crit-bg);
+  color: var(--status-crit);
+  border-color: var(--status-crit-border);
+}
+
+/* Edit button: same shape, neutral */
+.btn-edit-soft {
+  background: var(--surface-sunken);
+  color: var(--bg-panel);
+  border-color: transparent;
+  padding: 8px 10px;
+  min-height: 36px;
+  min-width: 36px;
+}
+.btn-edit-soft:hover {
+  background: var(--surface-sunken);
+  color: var(--bg-panel);
+  border-color: var(--border-strong);
+}
+
+/* Callouts (the conciliación + cobertura tinted blocks) */
+.callout {
+  padding: 18px;
+  border-radius: 14px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-2);
+}
+.callout-ok    { background: var(--status-ok-bg);   border-color: var(--status-ok-border); }
+.callout-warn  { background: var(--status-warn-bg); border-color: var(--status-warn-border); }
+.callout-crit  { background: var(--status-crit-bg); border-color: var(--status-crit-border); }
+.callout-debt  { background: var(--accent-soft);    border-color: rgba(233,78,119,0.22); }
+
+/* Approval tag (orange pill "X sin aprobar") */
+.tag-pending {
+  background: var(--status-warn);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 9px;
+  border-radius: 10px;
 }

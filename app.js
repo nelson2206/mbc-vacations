@@ -168,12 +168,12 @@ function openModalConsultor(id) {
   const body = `
     <div class="form-group">
       <label>Nombre completo</label>
-      <input class="form-control" id="fNombre" value="${c?c.nombre:''}" placeholder="Juan Pérez">
+      <input class="form-control" id="fNombre" value="${c ? esc(c.nombre) : ''}" placeholder="Juan Pérez">
     </div>
     <div class="form-row">
       <div class="form-group">
         <label>Cargo <span style="font-weight:400;color:var(--text-muted);font-size:0.75rem">(usado para alertas de cobertura)</span></label>
-        <input class="form-control" id="fCargo" list="cargosLista" value="${c?c.cargo:''}" placeholder="Consultor / Senior / Manager / Senior Manager">
+        <input class="form-control" id="fCargo" list="cargosLista" value="${c ? esc(c.cargo) : ''}" placeholder="Consultor / Senior / Manager / Senior Manager">
         <datalist id="cargosLista">
           <option value="Consultor"></option>
           <option value="Senior"></option>
@@ -183,7 +183,7 @@ function openModalConsultor(id) {
       </div>
       <div class="form-group">
         <label>Fecha de ingreso</label>
-        <input class="form-control" id="fIngreso" type="date" value="${c?c.fechaIngreso:''}">
+        <input class="form-control" id="fIngreso" type="date" value="${c ? esc(c.fechaIngreso) : ''}">
       </div>
     </div>
   `;
@@ -222,7 +222,7 @@ function guardarConsultor(id) {
 }
 
 function confirmarEliminar(id, nombre) {
-  openModal('Eliminar Consultor', `<p>¿Seguro que deseas eliminar a <strong>${nombre}</strong>? Se eliminarán también sus solicitudes.</p>`,
+  openModal('Eliminar Consultor', `<p>¿Seguro que deseas eliminar a <strong>${esc(nombre)}</strong>? Se eliminarán también sus solicitudes.</p>`,
     `<button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
      <button class="btn btn-danger" onclick="deleteConsultor('${id}');closeModal();navigateTo(currentView);showToast('Consultor eliminado','info')">Eliminar</button>`);
 }
@@ -233,7 +233,7 @@ function openModalRegistroReal() {
   if (cons.length === 0) { showToast('Primero agrega consultores', 'error'); return; }
   
   const sortedCons = [...cons].sort((a,b) => a.nombre.localeCompare(b.nombre));
-  const opts = sortedCons.map(c => `<option value="${c.nombre}"></option>`).join('');
+  const opts = sortedCons.map(c => `<option value="${esc(c.nombre)}"></option>`).join('');
   
   const body = `
     <div class="form-group">
@@ -324,11 +324,11 @@ function editarVacacionReal(cid, idx) {
     <div class="form-row">
       <div class="form-group">
         <label>Día Inicial</label>
-        <input class="form-control" id="fEditInicio" type="date" value="${v.inicio}" onchange="updateDiasPreview('fEditInicio', 'fEditFin', 'editDiasPreview')">
+        <input class="form-control" id="fEditInicio" type="date" value="${esc(v.inicio)}" onchange="updateDiasPreview('fEditInicio', 'fEditFin', 'editDiasPreview')">
       </div>
       <div class="form-group">
         <label>Día Final</label>
-        <input class="form-control" id="fEditFin" type="date" value="${v.fin}" onchange="updateDiasPreview('fEditInicio', 'fEditFin', 'editDiasPreview')">
+        <input class="form-control" id="fEditFin" type="date" value="${esc(v.fin)}" onchange="updateDiasPreview('fEditInicio', 'fEditFin', 'editDiasPreview')">
       </div>
     </div>
     <div id="editDiasPreview" style="margin-top:10px; font-weight:700; color:var(--accent); font-size:1.1rem">${v.dias} ${v.dias === 1 ? 'día seleccionado' : 'días seleccionados'}</div>
@@ -380,13 +380,13 @@ function resolverConflicto(cid, idxKeep, idxRemove) {
   const body = `
     <p style="margin-bottom:14px">Se conservará el siguiente registro:</p>
     <div style="padding:14px;border-radius:10px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);margin-bottom:12px">
-      <strong>${keep.inicio} → ${keep.fin}</strong>
-      <span style="color:var(--text-muted);margin-left:8px">${keep.dias} días · ${keep.origen}</span>
+      <strong>${esc(keep.inicio)} → ${esc(keep.fin)}</strong>
+      <span style="color:var(--text-muted);margin-left:8px">${keep.dias} días · ${esc(keep.origen)}</span>
     </div>
     <p style="margin-bottom:14px">Y se eliminará:</p>
     <div style="padding:14px;border-radius:10px;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.25)">
-      <strong>${remove.inicio} → ${remove.fin}</strong>
-      <span style="color:var(--text-muted);margin-left:8px">${remove.dias} días · ${remove.origen}</span>
+      <strong>${esc(remove.inicio)} → ${esc(remove.fin)}</strong>
+      <span style="color:var(--text-muted);margin-left:8px">${remove.dias} días · ${esc(remove.origen)}</span>
     </div>`;
   openModal(
     `Resolver conflicto · ${c.nombre}`,
@@ -443,7 +443,7 @@ function confirmarEliminarReal(cid, idx) {
 function openModalSolicitud() {
   const cons = getActiveConsultores();
   if (cons.length === 0) { showToast('Primero agrega consultores', 'error'); return; }
-  const opts = cons.map(c => `<option value="${c.id}">${c.nombre} (${calcDiasDisponibles(c)} días disp.)</option>`).join('');
+  const opts = cons.map(c => `<option value="${esc(c.id)}">${esc(c.nombre)} (${calcDiasDisponibles(c)} días disp.)</option>`).join('');
   const body = `
     <div class="form-group">
       <label>Consultor</label>
@@ -1020,7 +1020,7 @@ function verDatosImportacion(impId) {
     tableHtml = `<div class="preview-table" style="max-height:400px">
       <table>
         <thead><tr><th>Nombre</th><th>Días Pendientes</th><th>Cargo</th></tr></thead>
-        <tbody>${datos.map(d => `<tr><td>${d.nombre}</td><td>${d.diasPendientes}</td><td>${d.cargo || '—'}</td></tr>`).join('')}</tbody>
+        <tbody>${datos.map(d => `<tr><td>${esc(d.nombre)}</td><td>${esc(d.diasPendientes)}</td><td>${esc(d.cargo) || '—'}</td></tr>`).join('')}</tbody>
       </table>
     </div>`;
   } else {
