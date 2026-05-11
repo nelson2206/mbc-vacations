@@ -6,6 +6,7 @@ let currentView = 'dashboard';
 function navigateTo(view) {
   currentView = view;
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === view));
+  document.querySelectorAll('.bottom-tab').forEach(t => t.classList.toggle('active', t.dataset && t.dataset.view === view));
   const main = document.getElementById('mainContent');
   switch(view) {
     case 'dashboard': main.innerHTML = renderDashboard(); break;
@@ -76,15 +77,21 @@ function updateAlertBadge() {
 }
 
 function updateConflictosBadge() {
-  const badge = document.getElementById('conflictosBadge');
-  if (!badge) return;
   const overlaps = (typeof findAllConflictos === 'function') ? findAllConflictos().length : 0;
   const cobertura = (typeof findConflictosCobertura === 'function')
     ? findConflictosCobertura().filter(w => !w.aprobado).length
     : 0;
   const count = overlaps + cobertura;
-  badge.textContent = count;
-  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  const badge = document.getElementById('conflictosBadge');
+  if (badge) {
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  }
+  const tabBadge = document.getElementById('tabConflictosBadge');
+  if (tabBadge) {
+    tabBadge.textContent = count > 9 ? '9+' : count;
+    tabBadge.style.display = count > 0 ? 'flex' : 'none';
+  }
 }
 
 // ===== HTML escape helper (úsalo cuando interpoles datos en innerHTML) =====

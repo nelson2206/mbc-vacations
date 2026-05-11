@@ -1329,3 +1329,212 @@ body { background: var(--bg-base); }
   padding: 2px 9px;
   border-radius: 10px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE UX OVERHAUL — drawer sidebar, bottom tab bar, sticky header
+   Fixes critical layout bug where body's flex display + fixed sidebar
+   was reserving sidebar width even when off-canvas.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* Body no longer flex on mobile: sidebar floats over content */
+  body {
+    display: block;
+    overflow-x: hidden;
+  }
+  .main-content {
+    margin-left: 0 !important;
+    width: 100%;
+    max-width: 100%;
+    padding: 14px 16px 96px;  /* room for bottom tab bar */
+  }
+  .sidebar {
+    width: 84vw;
+    max-width: 320px;
+    transform: translateX(-105%);
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 2500;
+    box-shadow: 0 0 60px rgba(0,0,0,0.4);
+  }
+  .sidebar.active { transform: translateX(0); }
+  .sidebar-overlay {
+    background: rgba(20,5,10,0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  /* ── Mobile header: clean, sticky, with alert badge ── */
+  .mobile-header {
+    display: flex;
+    padding: 12px 16px;
+    background: var(--bg-panel);
+    color: white;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 1500;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.15);
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+  .mobile-header strong { letter-spacing: 0.14em; font-weight: 700; font-size: 1rem; }
+  .menu-toggle {
+    width: 38px; height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+    font-size: 1.2rem;
+  }
+
+  /* ── Page header: stack cleanly, no horizontal cramming ── */
+  .page-header {
+    display: block !important;
+    margin-bottom: 18px;
+  }
+  .page-header h1, .page-header h2 {
+    font-size: 1.45rem;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+  }
+  .page-header p {
+    font-size: 0.84rem;
+    margin-top: 4px;
+  }
+  .page-header > .status-badge {
+    margin-top: 10px;
+    display: inline-flex;
+  }
+  /* Vertical filter on its own row, horizontal scrollable */
+  .page-header > div:last-child {
+    margin-top: 14px;
+    width: 100%;
+    align-items: flex-start !important;
+  }
+  .page-header > div:last-child > div {
+    width: 100%;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 6px;
+    gap: 8px !important;
+  }
+  .page-header > div:last-child > div::-webkit-scrollbar { display: none; }
+  .page-header > div:last-child > div > button { flex-shrink: 0; }
+
+  /* Hero strip stacks 1 column; lead stays prominent */
+  .hero-strip { grid-template-columns: 1fr; gap: 10px; margin-bottom: 18px; }
+  .hero-strip .stat-card { padding: 16px 18px; border-radius: 14px; }
+  .hero-strip .stat-card.lead { padding: 20px 22px; }
+  .hero-strip .stat-card.lead .stat-value { font-size: 2.8rem; }
+  .hero-strip .stat-card .stat-value { font-size: 1.8rem; }
+
+  /* Risk grid stacks; preserve column tints */
+  .risk-grid { grid-template-columns: 1fr !important; gap: 12px; }
+  .risk-column { border-radius: 14px; }
+  .risk-person-card { padding: 12px; }
+
+  /* Cards & sections breathe less */
+  .card { padding: 16px; border-radius: 12px; }
+  .section { margin-bottom: 20px; }
+
+  /* Tables: hint horizontal scroll */
+  .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; }
+  table { min-width: 640px; font-size: 0.84rem; }
+  thead th, tbody td { padding: 9px 10px; }
+
+  /* Modal: full-screen drawer on mobile */
+  .modal-overlay.active { padding: 0; }
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92vh;
+    margin: auto 0 0;
+    border-radius: 18px 18px 0 0;
+    transform: translateY(100%);
+  }
+  .modal-overlay.active .modal { transform: translateY(0); }
+  .modal-header { padding: 14px 16px; }
+  .modal-body   { padding: 14px 16px; }
+  .modal-footer { padding: 14px 16px; flex-wrap: wrap; gap: 8px; }
+  .modal-footer .btn { flex: 1 1 auto; min-width: 0; }
+
+  /* ── BOTTOM TAB BAR: iOS-style native nav ── */
+  .bottom-tab-bar {
+    position: fixed;
+    left: 0; right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-top: 1px solid var(--border-soft);
+    display: flex;
+    z-index: 1400;
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  .bottom-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 8px 4px 10px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    position: relative;
+    min-height: 56px;
+    transition: color var(--dur-fast) var(--ease-out-quart);
+  }
+  .bottom-tab svg { width: 22px; height: 22px; stroke-width: 1.8; }
+  .bottom-tab.active { color: var(--bg-panel); }
+  .bottom-tab.active::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    width: 32px;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+    background: var(--bg-panel);
+  }
+  .bottom-tab .tab-badge {
+    position: absolute;
+    top: 4px;
+    right: calc(50% - 22px);
+    min-width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: white;
+    font-size: 0.58rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-shadow: 0 0 0 2px white;
+  }
+}
+
+/* Hide tab bar on desktop */
+.bottom-tab-bar { display: none; }
+@media (max-width: 768px) {
+  .bottom-tab-bar { display: flex; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Small phones (≤380px): tighten further
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 380px) {
+  .main-content { padding: 12px 12px 88px; }
+  .page-header h1, .page-header h2 { font-size: 1.3rem; }
+  .hero-strip .stat-card.lead .stat-value { font-size: 2.4rem; }
+  .mobile-header { padding: 11px 14px; }
+}
