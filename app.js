@@ -20,6 +20,7 @@ function navigateTo(view) {
     case 'gestiones': main.innerHTML = renderGestiones(); break;
     case 'reportes': main.innerHTML = renderReportes(); break;
     case 'conflictos': main.innerHTML = renderConflictos(); break;
+    case 'cumpleaños': main.innerHTML = renderCumpleaños(); break;
   }
 
   // Restaurar foco si el ID existe
@@ -209,6 +210,10 @@ function openModalConsultor(id) {
         <label>Fecha de ingreso</label>
         <input class="form-control" id="fIngreso" type="date" value="${c ? esc(c.fechaIngreso) : ''}">
       </div>
+      <div class="form-group">
+        <label>🎂 Cumpleaños</label>
+        <input class="form-control" id="fCumple" type="date" value="${c ? esc(c.cumpleaños) : ''}">
+      </div>
     </div>
   `;
   const footer = `
@@ -222,12 +227,13 @@ function guardarConsultor(id) {
   const nombre = document.getElementById('fNombre').value.trim();
   const cargo = document.getElementById('fCargo').value.trim();
   const fechaIngreso = document.getElementById('fIngreso').value;
+  const cumpleaños = document.getElementById('fCumple').value;
 
   if (!nombre) { showToast('Ingresa el nombre del consultor', 'error'); return; }
   if (!fechaIngreso) { showToast('Ingresa la fecha de ingreso', 'error'); return; }
 
   if (id) {
-    updateConsultor(id, { nombre, cargo, fechaIngreso });
+    updateConsultor(id, { nombre, cargo, fechaIngreso, cumpleaños });
     showToast('Consultor actualizado', 'success');
   } else {
     // defaults for a new manual consultant
@@ -235,6 +241,7 @@ function guardarConsultor(id) {
       nombre, 
       cargo, 
       fechaIngreso,
+      cumpleaños,
       estado: 'activo',
       diasPendientesHR: 0,
       diasTruncos: 0

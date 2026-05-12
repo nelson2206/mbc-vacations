@@ -117,6 +117,33 @@ function renderDashboard() {
       <div class="status-badge ${isCloudConnected ? 'online' : 'offline'}">
         ${isCloudConnected ? '● Sincronizado' : '○ Modo Local'}
       </div>
+    </div>
+
+    ${(function(){
+      const d = new Date();
+      const todayMMDD = String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      const cumpleañeros = cons.filter(c => {
+        if (!c.cumpleaños) return false;
+        const cDate = new Date(c.cumpleaños + 'T00:00:00');
+        const cMMDD = String(cDate.getMonth()+1).padStart(2,'0') + '-' + String(cDate.getDate()).padStart(2,'0');
+        return cMMDD === todayMMDD;
+      });
+      if (cumpleañeros.length === 0) return '';
+      return `
+        <div class="card" style="background: linear-gradient(135deg, var(--brand-tint-3) 0%, #fff 100%); border-left: 5px solid var(--accent); margin-bottom: 20px; animation: slideIn 0.5s ease-out">
+          <div style="display:flex; align-items:center; gap:20px; padding:10px">
+            <div style="font-size:3rem">🎂</div>
+            <div>
+              <h3 style="color:var(--accent); margin-bottom:4px">¡Hoy celebramos un cumpleaños!</h3>
+              <p style="font-size:1.1rem; font-weight:600; color:var(--bg-panel)">
+                ${cumpleañeros.map(c => esc(c.nombre)).join(', ')}
+              </p>
+              <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="navigateTo('cumpleaños')">Ver todos los cumpleaños ➔</button>
+            </div>
+          </div>
+        </div>
+      `;
+    })()}
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
         <span style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted)">Filtrar por Vertical</span>
         <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end">
@@ -601,6 +628,7 @@ function verDetalleConsultor(id) {
           </div>
           <div><span style="color:var(--text-muted);font-size:0.8rem;font-weight:600">Vertical / Equipo</span><br><strong>${c.vertical || 'Sin asignar'}</strong></div>
           <div><span style="color:var(--text-muted);font-size:0.8rem;font-weight:600">Cargo Actual</span><br><strong>${esc(c.cargo)}</strong></div>
+          <div><span style="color:var(--text-muted);font-size:0.8rem;font-weight:600">🎂 Cumpleaños</span><br><strong>${esc(c.cumpleaños) || '—'}</strong></div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;margin-top:20px;padding-top:15px;border-top:1px solid rgba(0,0,0,0.05)">
           <div><span style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase">Pendientes (Gabin)</span><br><strong style="font-size:1.2rem;color:var(--bg-panel)">${c.diasPendientesHR || 0}</strong></div>
@@ -1110,4 +1138,104 @@ function renderAuditoria() {
       </div>
     </div>
   `;
+}
+
+function renderCumpleaños() {
+  const cons = getActiveConsultores().filter(c => c.cumpleaños);
+  const d = new Date();
+  const todayMMDD = String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  
+  // Sort by month/day
+  cons.sort((a, b) => {
+    const da = new Date(a.cumpleaños + 'T00:00:00');
+    const db = new Date(b.cumpleaños + 'T00:00:00');
+    const ma = da.getMonth(), mb = db.getMonth();
+    if (ma !== mb) return ma - mb;
+    return da.getDate() - db.getDate();
+  });
+
+  const hoyCumplen = cons.filter(c => {
+    const cDate = new Date(c.cumpleaños + 'T00:00:00');
+    return String(cDate.getMonth()+1).padStart(2,'0') + '-' + String(cDate.getDate()).padStart(2,'0') === todayMMDD;
+  });
+
+  const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+  return `
+    <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start">
+      <div>
+        <h1>🎂 Calendario de Cumpleaños</h1>
+        <p>Fechas especiales de todo el equipo</p>
+      </div>
+      <button class="btn btn-primary" onclick="enviarCorreoCumpleaños()" style="display:flex; align-items:center; gap:8px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+        Enviar Recordatorio por Correo
+      </button>
+    </div>
+
+    ${hoyCumplen.length > 0 ? `
+      <div class="card" style="background: var(--brand-tint-2); border: 2px solid var(--accent); margin-bottom: 25px">
+        <div style="display:flex; align-items:center; gap:15px; margin-bottom:10px">
+          <span style="font-size:2rem">🎉</span>
+          <h3 style="color:var(--accent)">¡Hoy es el gran día!</h3>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:10px">
+          ${hoyCumplen.map(c => `
+            <div class="chip" style="background:white; border:1px solid var(--accent); color:var(--accent); font-weight:700; padding:8px 15px; border-radius:20px">
+              ${esc(c.nombre)}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : ''}
+
+    <div class="grid-3">
+      ${[0,1,2,3,4,5,6,7,8,9,10,11].map(m => {
+        const enEsteMes = cons.filter(c => new Date(c.cumpleaños + 'T00:00:00').getMonth() === m);
+        return `
+          <div class="card" style="${enEsteMes.length > 0 ? '' : 'opacity:0.6'}">
+            <h4 style="border-bottom: 1px solid var(--border); padding-bottom:10px; margin-bottom:12px; color:var(--bg-panel)">
+              ${meses[m]}
+            </h4>
+            <div style="display:flex; flex-direction:column; gap:8px">
+              ${enEsteMes.length === 0 ? '<p style="font-size:0.8rem; color:var(--text-muted)">Sin cumpleaños</p>' : 
+                enEsteMes.map(c => {
+                  const cDate = new Date(c.cumpleaños + 'T00:00:00');
+                  const isToday = String(cDate.getMonth()+1).padStart(2,'0') + '-' + String(cDate.getDate()).padStart(2,'0') === todayMMDD;
+                  return `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:6px; border-radius:6px; ${isToday ? 'background:var(--brand-tint-5); font-weight:700' : ''}">
+                      <span style="font-size:0.85rem">${esc(shortenName(c.nombre))}</span>
+                      <span style="font-size:0.75rem; color:var(--text-muted)">${cDate.getDate()}</span>
+                    </div>
+                  `;
+                }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function enviarCorreoCumpleaños() {
+  const d = new Date();
+  const todayMMDD = String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  const cons = getActiveConsultores();
+  const cumpleañeros = cons.filter(c => {
+    if (!c.cumpleaños) return false;
+    const cDate = new Date(c.cumpleaños + 'T00:00:00');
+    return String(cDate.getMonth()+1).padStart(2,'0') + '-' + String(cDate.getDate()).padStart(2,'0') === todayMMDD;
+  });
+
+  if (cumpleañeros.length === 0) {
+    showToast('No hay cumpleaños registrados para hoy.', 'info');
+    return;
+  }
+
+  const nombres = cumpleañeros.map(c => c.nombre).join(', ');
+  const subject = encodeURIComponent('🎂 Recordatorio: Cumpleaños de hoy en el equipo');
+  const body = encodeURIComponent(`Hola equipo,\n\nHoy celebramos el cumpleaños de:\n\n${cumpleañeros.map(c => '• ' + c.nombre).join('\n')}\n\n¡No olviden saludarlos!\n\nAtte,\nSistema VacaPeru`);
+  
+  const mailto = `mailto:nebernal@minsait.com?subject=${subject}&body=${body}`;
+  window.location.href = mailto;
 }
