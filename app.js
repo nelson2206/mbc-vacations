@@ -1033,12 +1033,18 @@ function processingCumpleaños(rows, filename) {
     return;
   }
 
-  const idxID = headers.findIndex(h => h.includes('ID') || h.includes('CÓDIGO') || h.includes('COD'));
+  const idxID = headers.findIndex(h => h.includes('ID') || h.includes('COD') || h.includes('CÓD') || h.includes('CDIG'));
   const idxNombre = headers.findIndex(h => h.includes('NOMBRE') || h.includes('EMPLEADO'));
-  const idxCumple = headers.findIndex(h => h.includes('CUMPLE') || h.includes('NACIMIENTO') || h.includes('FECHA') || h.includes('FEC. NAC') || h.includes('FEC.NAC'));
+  const idxCumple = headers.findIndex(h => 
+    h.includes('CUMPLE') || 
+    h.includes('NAC') || 
+    (h.includes('FECHA') && !h.includes('INICIO') && !h.includes('INGRESO')) ||
+    h === 'FEC. NAC' || h === 'FEC.NAC'
+  );
 
   if (idxID === -1 && idxNombre === -1) {
     showToast('El archivo debe tener al menos una columna de ID o Nombre.', 'error');
+    console.error('Columnas detectadas:', headers);
     return;
   }
 
@@ -1046,15 +1052,18 @@ function processingCumpleaños(rows, filename) {
   let created = 0;
   const parseDate = (val) => {
     if (!val) return '';
-    if (typeof val === 'number') return new Date(Math.round((val - 25569) * 86400 * 1000)).toISOString().slice(0,10);
+    if (typeof val === 'number') {
+      // Excel serial date
+      const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+      return d.toISOString().slice(0, 10);
+    }
     try {
-      if (typeof val === 'string') {
-        const s = val.trim().split(' ')[0];
-        const parts = s.split(/[\/-]/);
-        if (parts.length === 3) {
-          if (parts[0].length === 4) return s; // YYYY-MM-DD
-          return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
-        }
+      const s = String(val).trim();
+      // Handle YYYY-MM-DD HH:MM:SS or DD/MM/YYYY
+      const parts = s.split(/[\sT]/)[0].split(/[\/-]/);
+      if (parts.length === 3) {
+        if (parts[0].length === 4) return `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`;
+        return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
       }
       const d = new Date(val);
       if (!isNaN(d)) return d.toISOString().slice(0, 10);
