@@ -4,6 +4,11 @@ let currentView = 'dashboard';
 
 // ===== NAVIGATION =====
 function navigateTo(view) {
+  // Guardar el foco si es un input
+  const focusedId = document.activeElement ? document.activeElement.id : null;
+  const selectionStart = document.activeElement ? document.activeElement.selectionStart : null;
+  const selectionEnd = document.activeElement ? document.activeElement.selectionEnd : null;
+
   currentView = view;
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === view));
   document.querySelectorAll('.bottom-tab').forEach(t => t.classList.toggle('active', t.dataset && t.dataset.view === view));
@@ -16,6 +21,18 @@ function navigateTo(view) {
     case 'reportes': main.innerHTML = renderReportes(); break;
     case 'conflictos': main.innerHTML = renderConflictos(); break;
   }
+
+  // Restaurar foco si el ID existe
+  if (focusedId) {
+    const el = document.getElementById(focusedId);
+    if (el) {
+      el.focus();
+      if (selectionStart !== null && selectionEnd !== null) {
+        el.setSelectionRange(selectionStart, selectionEnd);
+      }
+    }
+  }
+
   main.scrollTop = 0;
   window.scrollTo(0, 0);
   updateAlertBadge();

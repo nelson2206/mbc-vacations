@@ -735,12 +735,20 @@ window.mostrarEnVacacionesHoy = function() {
 };
 
 // ----- GESTIONES REALES VIEW -----
-window.gestionesConfig = { sortCol: 'inicio', sortAsc: false };
+window.gestionesConfig = { sortCol: 'inicio', sortAsc: false, filter: '' };
 
 window.setGestionesSort = function(col) {
   if (gestionesConfig.sortCol === col) gestionesConfig.sortAsc = !gestionesConfig.sortAsc;
   else { gestionesConfig.sortCol = col; gestionesConfig.sortAsc = true; }
   navigateTo('gestiones');
+};
+
+window.setGestionesFilter = function() {
+  const input = document.getElementById('searchGestiones');
+  if (input) {
+    gestionesConfig.filter = input.value.toLowerCase().trim();
+    navigateTo('gestiones');
+  }
 };
 
 function renderGestiones() {
@@ -751,6 +759,9 @@ function renderGestiones() {
     if (c.realVacations) {
       c.realVacations.forEach((v, idx) => {
         const planificada = esVacacionPlanificada(v);
+        // Filtro por nombre
+        if (gestionesConfig.filter && !c.nombre.toLowerCase().includes(gestionesConfig.filter)) return;
+        
         allVacs.push({ c, v, idx, planificada });
         if (planificada) totalPlanificado += (v.dias || 0);
         else totalEjecutado += (v.dias || 0);
@@ -795,6 +806,19 @@ function renderGestiones() {
       <div class="callout" style="padding:18px">
         <span style="color:var(--text-muted);font-size:0.78rem;font-weight:600;text-transform:uppercase">Total Planificado</span><br>
         <strong style="font-size:1.8rem;color:var(--bg-panel)">${totalPlanificado}</strong> <span style="font-size:0.85rem;color:var(--text-muted)">días futuros (no suman al total)</span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px; padding:15px">
+      <div style="position:relative">
+        <span style="position:absolute; left:12px; top:11px; color:var(--text-muted)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </span>
+        <input type="text" id="searchGestiones" 
+          placeholder="Buscar consultor en gestión real..." 
+          value="${esc(gestionesConfig.filter)}"
+          oninput="setGestionesFilter()"
+          style="width:100%; padding:10px 15px 10px 40px; border-radius:10px; border:1.5px solid var(--border); font-size:0.9rem">
       </div>
     </div>
 
