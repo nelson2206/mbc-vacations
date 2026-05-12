@@ -491,12 +491,24 @@ function renderImportar() {
       <!-- GESTION REAL -->
       <div class="card" style="display:flex;flex-direction:column;justify-content:space-between; border: 1px solid var(--bg-panel-alt)">
         <div>
-          <div style="font-size:2rem;margin-bottom:12px">✅</div>
+          <div style="font-size:2rem;margin-bottom:12px">⏱️</div>
           <h3 style="margin-bottom:8px; color:var(--bg-panel)">Gestión Real</h3>
-          <p style="font-size:0.85rem;color:var(--bg-panel);opacity:0.7;margin-bottom:16px; font-weight:500">Días reales tomados (aunque sean menos de 7 días).</p>
+          <p style="font-size:0.85rem;color:var(--bg-panel);opacity:0.7;margin-bottom:16px; font-weight:500">Historial de salidas reales procesadas por el equipo.</p>
         </div>
         <div class="upload-zone" style="padding:20px 10px; border-style:dashed; border-width:2px; border-color:var(--bg-panel-alt)">
           <input type="file" style="opacity:1;position:static;width:100%" onchange="handleFileUpload(this.files[0], 'real')">
+        </div>
+      </div>
+
+      <!-- CUMPLEAÑOS -->
+      <div class="card" style="display:flex;flex-direction:column;justify-content:space-between; border: 1px solid var(--bg-panel-alt)">
+        <div>
+          <div style="font-size:2rem;margin-bottom:12px">🎂</div>
+          <h3 style="margin-bottom:8px; color:var(--bg-panel)">Calendario de Cumpleaños</h3>
+          <p style="font-size:0.85rem;color:var(--bg-panel);opacity:0.7;margin-bottom:16px; font-weight:500">Base de datos de fechas de nacimiento del equipo.</p>
+        </div>
+        <div class="upload-zone" style="padding:20px 10px; border-style:dashed; border-width:2px; border-color:var(--bg-panel-alt)">
+          <input type="file" style="opacity:1;position:static;width:100%" onchange="handleFileUpload(this.files[0], 'cumpleaños')">
         </div>
       </div>
     </div>
@@ -1162,58 +1174,79 @@ function renderCumpleaños() {
   const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
   return `
-    <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start">
+    <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px">
       <div>
         <h1>🎂 Calendario de Cumpleaños</h1>
         <p>Fechas especiales de todo el equipo</p>
       </div>
-      <button class="btn btn-primary" onclick="enviarCorreoCumpleaños()" style="display:flex; align-items:center; gap:8px">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-        Enviar Recordatorio por Correo
-      </button>
-    </div>
-
-    ${hoyCumplen.length > 0 ? `
-      <div class="card" style="background: var(--brand-tint-2); border: 2px solid var(--accent); margin-bottom: 25px">
-        <div style="display:flex; align-items:center; gap:15px; margin-bottom:10px">
-          <span style="font-size:2rem">🎉</span>
-          <h3 style="color:var(--accent)">¡Hoy es el gran día!</h3>
-        </div>
-        <div style="display:flex; flex-wrap:wrap; gap:10px">
-          ${hoyCumplen.map(c => `
-            <div class="chip" style="background:white; border:1px solid var(--accent); color:var(--accent); font-weight:700; padding:8px 15px; border-radius:20px">
-              ${esc(c.nombre)}
-            </div>
-          `).join('')}
-        </div>
+      <div style="display:flex; gap:10px">
+        <button class="btn btn-outline" onclick="navigateTo('importar')" style="display:flex; align-items:center; gap:8px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          Importar Excel
+        </button>
+        <button class="btn btn-primary" onclick="enviarCorreoCumpleaños()" style="display:flex; align-items:center; gap:8px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+          Enviar Recordatorio
+        </button>
       </div>
-    ` : ''}
-
-    <div class="grid-3">
-      ${[0,1,2,3,4,5,6,7,8,9,10,11].map(m => {
-        const enEsteMes = cons.filter(c => new Date(c.cumpleaños + 'T00:00:00').getMonth() === m);
-        return `
-          <div class="card" style="${enEsteMes.length > 0 ? '' : 'opacity:0.6'}">
-            <h4 style="border-bottom: 1px solid var(--border); padding-bottom:10px; margin-bottom:12px; color:var(--bg-panel)">
-              ${meses[m]}
-            </h4>
-            <div style="display:flex; flex-direction:column; gap:8px">
-              ${enEsteMes.length === 0 ? '<p style="font-size:0.8rem; color:var(--text-muted)">Sin cumpleaños</p>' : 
-                enEsteMes.map(c => {
-                  const cDate = new Date(c.cumpleaños + 'T00:00:00');
-                  const isToday = String(cDate.getMonth()+1).padStart(2,'0') + '-' + String(cDate.getDate()).padStart(2,'0') === todayMMDD;
-                  return `
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:6px; border-radius:6px; ${isToday ? 'background:var(--brand-tint-5); font-weight:700' : ''}">
-                      <span style="font-size:0.85rem">${esc(shortenName(c.nombre))}</span>
-                      <span style="font-size:0.75rem; color:var(--text-muted)">${cDate.getDate()}</span>
-                    </div>
-                  `;
-                }).join('')}
-            </div>
-          </div>
-        `;
-      }).join('')}
     </div>
+
+    ${cons.length === 0 ? `
+      <div class="card" style="text-align:center; padding:60px 20px; border: 2px dashed var(--border)">
+        <div style="font-size:4rem; margin-bottom:20px">🎂</div>
+        <h2 style="color:var(--bg-panel); margin-bottom:10px">No hay cumpleaños registrados</h2>
+        <p style="color:var(--text-muted); max-width:400px; margin:0 auto 24px">Carga el archivo Excel de cumpleaños para ver las fechas especiales de todo el equipo y recibir recordatorios.</p>
+        <button class="btn btn-primary btn-lg" onclick="navigateTo('importar')">Ir a Importación de Datos</button>
+      </div>
+    ` : `
+      ${hoyCumplen.length > 0 ? `
+        <div class="card" style="background: var(--brand-tint-2); border: 2px solid var(--accent); margin-bottom: 25px">
+          <div style="display:flex; align-items:center; gap:15px; margin-bottom:10px">
+            <span style="font-size:2rem">🎉</span>
+            <h3 style="color:var(--accent)">¡Hoy es el gran día!</h3>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:10px">
+            ${hoyCumplen.map(c => `
+              <div class="chip" style="background:white; border:1px solid var(--accent); color:var(--accent); font-weight:700; padding:8px 15px; border-radius:20px; cursor:pointer" onclick="verDetalleConsultor('${c.id}')">
+                ${esc(c.nombre)}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <div class="grid-3">
+        ${[0,1,2,3,4,5,6,7,8,9,10,11].map(m => {
+          const enEsteMes = cons.filter(c => new Date(c.cumpleaños + 'T00:00:00').getMonth() === m);
+          return `
+            <div class="card" style="${enEsteMes.length > 0 ? '' : 'opacity:0.6'}">
+              <h4 style="border-bottom: 1px solid var(--border); padding-bottom:10px; margin-bottom:12px; color:var(--bg-panel)">
+                ${meses[m]}
+              </h4>
+              <div style="display:flex; flex-direction:column; gap:8px">
+                ${enEsteMes.length === 0 ? '<p style="font-size:0.8rem; color:var(--text-muted)">Sin cumpleaños</p>' : 
+                  enEsteMes.map(c => {
+                    const cDate = new Date(c.cumpleaños + 'T00:00:00');
+                    const isToday = String(cDate.getMonth()+1).padStart(2,'0') + '-' + String(cDate.getDate()).padStart(2,'0') === todayMMDD;
+                    return `
+                      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-radius:8px; cursor:pointer; ${isToday ? 'background:var(--brand-tint-5); font-weight:700; border:1px solid var(--accent)' : 'border:1px solid transparent'}" 
+                           onclick="verDetalleConsultor('${c.id}')"
+                           onmouseover="this.style.background='var(--bg-panel-alt)'"
+                           onmouseout="this.style.background='${isToday ? 'var(--brand-tint-5)' : 'transparent'}'">
+                        <div style="display:flex; flex-direction:column">
+                          <span style="font-size:0.85rem">${esc(shortenName(c.nombre))}</span>
+                          ${c.vertical ? `<span style="font-size:0.65rem; color:var(--text-muted)">${esc(c.vertical)}</span>` : ''}
+                        </div>
+                        <span style="font-size:0.8rem; color:var(--bg-panel); font-weight:600">${cDate.getDate()}</span>
+                      </div>
+                    `;
+                  }).join('')}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `}
   `;
 }
 
