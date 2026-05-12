@@ -1191,6 +1191,67 @@ function renderCumpleaños() {
       </div>
     </div>
 
+    ${(function() {
+      const today = new Date();
+      const weekDays = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date();
+        d.setDate(today.getDate() + i);
+        const mmdd = String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        const dayLabel = i === 0 ? 'Hoy' : i === 1 ? 'Mañana' : d.toLocaleDateString('es-ES', { weekday: 'short' });
+        const dayNum = d.getDate();
+        const monthShort = d.toLocaleDateString('es-ES', { month: 'short' }).replace('.','');
+        
+        const people = cons.filter(c => {
+          const cDate = new Date(c.cumpleaños + 'T00:00:00');
+          return String(cDate.getMonth()+1).padStart(2,'0') + '-' + String(cDate.getDate()).padStart(2,'0') === mmdd;
+        });
+        
+        weekDays.push({ dayLabel, dayNum, monthShort, isToday: i === 0, people });
+      }
+
+      return `
+        <div class="card" style="margin-bottom:25px; padding:20px; background: linear-gradient(135deg, var(--brand-tint-3) 0%, #fff 100%); border:1px solid var(--brand-tint-10)">
+          <h3 style="margin-bottom:15px; color:var(--bg-panel); display:flex; align-items:center; gap:8px">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            Resumen de la Semana
+          </h3>
+          <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:5px">
+            ${weekDays.map(wd => `
+              <div style="
+                flex: 1; min-width: 100px; padding: 12px 8px; border-radius: 12px; text-align: center;
+                background: ${wd.isToday ? 'var(--bg-panel)' : 'white'};
+                color: ${wd.isToday ? 'white' : 'var(--text-on-light)'};
+                border: 1px solid ${wd.isToday ? 'var(--bg-panel)' : 'var(--border)'};
+                box-shadow: ${wd.isToday ? '0 5px 15px var(--brand-tint-20)' : 'none'};
+                transition: transform 0.2s;
+              ">
+                <span style="font-size:0.65rem; text-transform:uppercase; font-weight:700; opacity:${wd.isToday ? '0.9' : '0.6'}">${wd.dayLabel}</span>
+                <div style="font-size:1.4rem; font-weight:800; margin:2px 0">${wd.dayNum}</div>
+                <span style="font-size:0.7rem; font-weight:600; opacity:0.8">${wd.monthShort}</span>
+                
+                <div style="margin-top:10px; min-height:40px; display:flex; flex-direction:column; gap:4px; align-items:center">
+                  ${wd.people.length === 0 ? 
+                    `<div style="width:4px; height:4px; border-radius:50%; background:${wd.isToday ? 'rgba(255,255,255,0.3)' : 'var(--border)'}; margin-top:15px"></div>` : 
+                    wd.people.map(p => `
+                      <div title="${esc(p.nombre)}" style="
+                        width: 100%; font-size: 0.65rem; font-weight: 700; padding: 3px 5px; border-radius: 4px;
+                        background: ${wd.isToday ? 'rgba(255,255,255,0.2)' : 'var(--brand-tint-5)'};
+                        color: ${wd.isToday ? 'white' : 'var(--bg-panel)'};
+                        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                      ">
+                        ${esc(shortenName(p.nombre))}
+                      </div>
+                    `).join('')
+                  }
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    })()}
+
     ${cons.length === 0 ? `
       <div class="card" style="text-align:center; padding:60px 20px; border: 2px dashed var(--border)">
         <div style="font-size:4rem; margin-bottom:20px">🎂</div>
