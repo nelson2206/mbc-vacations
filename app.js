@@ -608,6 +608,7 @@ function handleFileUpload(file, type) {
       if (type === 'rrhh') processingRRHH(json, file.name);
       else if (type === 'verticales') processingVerticales(json, file.name);
       else if (type === 'real') processingReal(json, file.name);
+      else if (type === 'cumpleaños') processingCumpleaños(json, file.name);
       
     } catch(err) {
       showToast('Error al leer el archivo: ' + err.message, 'error');
@@ -1014,6 +1015,109 @@ function processingReal(rows, filename) {
   }
   navigateTo('importar');
 }
+
+function processingCumpleaños(rows, filename) {
+  let startIdx = -1;
+  let headers = [];
+  for (let i = 0; i < Math.min(rows.length, 10); i++) {
+    const r = rows[i].map(c => String(c || '').trim().toUpperCase());
+    if (r.some(c => c.includes('ID') || c.includes('CÓDIGO') || c.includes('COD') || c.includes('NOMBRE') || c.includes('EMPLEADO'))) {
+      startIdx = i;
+      headers = r;
+      break;
+    }
+  }
+
+  if (startIdx === -1) {
+    showToast('No se detectaron cabeceras (ID, Código, Nombre) en el archivo de cumpleaños.', 'error');
+    return;
+  }
+
+  const idxID = headers.findIndex(h => h.includes('ID') || h.includes('CÓDIGO') || h.includes('COD'));
+  const idxNombre = headers.findIndex(h => h.includes('NOMBRE') || h.includes('EMPLEADO'));
+  const idxCumple = headers.findIndex(h => h.includes('CUMPLE') || h.includes('NACIMIENTO') || h.includes('FECHA') || h.includes('FEC. NAC') || h.includes('FEC.NAC'));
+
+  if (idxID === -1 && idxNombre === -1) {
+    showToast('El archivo debe tener al menos una columna de ID o Nombre.', 'error');
+    return;
+  }
+
+  let updated = 0;
+  let created = 0;
+  const parseDate = (val) => {
+    if (!val) return '';
+    if (typeof val === 'number') return new Date(Math.round((val - 25569) * 86400 * 1000)).toISOString().slice(0,10);
+    try {
+      if (typeof val === 'string') {
+        const s = val.trim().split(' ')[0];
+        const parts = s.split(/[\/-]/);
+        if (parts.length === 3) {
+          if (parts[0].length === 4) return s; // YYYY-MM-DD
+          return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+        }
+      }
+      const d = new Date(val);
+      if (!isNaN(d)) return d.toISOString().slice(0, 10);
+    } catch(e) {}
+    return String(val);
+  };
+
+  rows.slice(startIdx + 1).forEach(row => {
+    const id = idxID >= 0 ? String(row[idxID] || '').trim() : '';
+    let nombre = idxNombre >= 0 ? String(row[idxNombre] || '').trim() : '';
+    const cumple = idxCumple >= 0 ? parseDate(row[idxCumple]) : '';
+
+    if (!nombre && !id) return;
+
+    // Buscar consultor existente
+    let existing = APP.consultores.find(c => {
+      if (id && c.idGabin) {
+        const cId = String(c.idGabin).trim().replace(/^0+/, '');
+        const fId = id.trim().replace(/^0+/, '');
+        if (cId === fId) return true;
+      }
+      if (nombre && c.nombre) {
+        const n1 = c.nombre.toLowerCase().trim().replace(/,/g, '').split(/\s+/).sort().join(' ');
+        const n2 = nombre.toLowerCase().trim().replace(/,/g, '').split(/\s+/).sort().join(' ');
+        if (n1 === n2) return true;
+      }
+      return false;
+    });
+
+    if (existing) {
+      if (cumple) existing.cumpleaños = cumple;
+      updated++;
+    } else {
+      if (nombre) {
+        existing = {
+          id: uid(),
+          idGabin: id,
+          nombre,
+          cargo: 'Consultor',
+          fechaIngreso: new Date().toISOString().slice(0,10),
+          estado: 'activo',
+          cumpleaños: cumple,
+          realVacations: []
+        };
+        APP.consultores.push(existing);
+        created++;
+      }
+    }
+
+    if (existing && !existing.vertical && APP.config.verticalesDict) {
+      const vId = id || existing.idGabin;
+      const vIdNoZeros = vId ? String(vId).replace(/^0+/, '') : '';
+      existing.vertical = APP.config.verticalesDict[vId] || 
+                          APP.config.verticalesDict[vIdNoZeros] || 
+                          APP.config.verticalesDict[existing.nombre.toLowerCase().trim()];
+    }
+  });
+
+  saveData(APP);
+  showToast(`Cumpleaños: ${updated} actualizados, ${created} nuevos consultores.`, 'success');
+  navigateTo('cumpleaños');
+}
+
 
 // ===== IMPORT HISTORY FUNCTIONS =====
 function getTimeAgo(date) {
