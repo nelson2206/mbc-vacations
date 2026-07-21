@@ -652,7 +652,11 @@ function handleFileUpload(file, type) {
   reader.onload = function(e) {
     try {
       const data = new Uint8Array(e.target.result);
-      const wb = XLSX.read(data, { type: 'array' });
+      // raw:true conserva el texto original de cada celda. Sin esto, SheetJS
+      // coacciona las fechas-texto del reporte HTML de Gabin ("11-04-2022")
+      // asumiendo formato US (MM-DD-YYYY) y las convierte en seriales corruptos,
+      // provocando fechas de ingreso cambiadas o absurdas (ej. antigüedad >100 años).
+      const wb = XLSX.read(data, { type: 'array', raw: true });
       const ws = wb.Sheets[wb.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
 
@@ -728,22 +732,28 @@ function processingRRHH(rows, filename) {
     if (!nombre) return;
 
     const vigentes = parseFloat(row[idxVigentes]) || 0;
+    // Rechaza fechas con año imposible (columna mal detectada o valor corrupto):
+    // preferimos '' — que NO sobreescribe el dato existente — antes que guardar un "1900".
+    const fechaPlausible = (iso) => {
+      const y = parseInt(String(iso).slice(0, 4), 10);
+      return (y >= 1990 && y <= new Date().getFullYear() + 2) ? iso : '';
+    };
     const parseDate = (val) => {
       if (!val) return '';
-      if (typeof val === 'number') return new Date(Math.round((val - 25569) * 86400 * 1000)).toISOString().slice(0,10);
+      if (typeof val === 'number') return fechaPlausible(new Date(Math.round((val - 25569) * 86400 * 1000)).toISOString().slice(0,10));
       if (typeof val === 'string') {
         const s = val.trim().split(' ')[0]; // Remove time if present
         const parts = s.split(/[\/-]/);
         if (parts.length === 3) {
-          if (parts[0].length === 4) return s; // YYYY-MM-DD
-          return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+          if (parts[0].length === 4) return fechaPlausible(s); // YYYY-MM-DD
+          return fechaPlausible(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`);
         }
       }
-      try { 
+      try {
         const d = new Date(val);
-        if (!isNaN(d)) return d.toISOString().slice(0, 10);
+        if (!isNaN(d)) return fechaPlausible(d.toISOString().slice(0, 10));
       } catch(e) {}
-      return String(val);
+      return String(val); // texto no-fecha (ej. "Marzo 2027" en Fecha Max) pasa tal cual
     };
 
     let maxSalida = parseDate(row[idxMaxSalida]);
