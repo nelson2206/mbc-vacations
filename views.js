@@ -76,7 +76,7 @@ function renderDashboard() {
     const planificado = calcDiasPlanificadosReales(c.id);
     const al = getAlertaLegal(c);
     const cls = al.nivel === 'critical' ? 'crit' : al.nivel === 'warning' ? 'warn' : 'safe';
-    const fechaMax = c.fechaMaxGabin ? `<div style="font-size:0.65rem;margin-top:2px;color:var(--text-muted)">Max Gabin: <strong>${esc(c.fechaMaxGabin)}</strong></div>` : '';
+    const fechaMax = c.fechaMaxGabin ? `<div style="font-size:0.65rem;margin-top:2px;color:var(--text-muted)">Max Gabin: <strong>${esc(formatMesMax(c.fechaMaxGabin))}</strong></div>` : '';
     const planTag = planificado > 0
       ? `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 8px;border-radius:10px;background:var(--brand-tint-8);color:var(--bg-panel);font-size:0.65rem;font-weight:700">📅 ${Math.round(planificado)} días planificados</div>`
       : '';
@@ -645,7 +645,7 @@ function verDetalleConsultor(id) {
         <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;margin-top:20px;padding-top:15px;border-top:1px solid rgba(0,0,0,0.05)">
           <div><span style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase">Pendientes (Gabin)</span><br><strong style="font-size:1.2rem;color:var(--bg-panel)">${c.diasPendientesHR || 0}</strong></div>
           <div><span style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase">Truncos (Gabin)</span><br><strong style="font-size:1.2rem;color:var(--bg-panel)">${c.diasTruncos || 0}</strong></div>
-          <div><span style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase">Fecha Max (Gabin)</span><br><strong style="font-size:1.1rem;color:var(--accent)">${esc(c.fechaMaxGabin) || '—'}</strong></div>
+          <div><span style="color:var(--text-muted);font-size:0.75rem;font-weight:600;text-transform:uppercase">Fecha Max (Gabin)</span><br><strong style="font-size:1.1rem;color:var(--accent)">${esc(formatMesMax(c.fechaMaxGabin)) || '—'}</strong></div>
         </div>
       </div>
       
@@ -674,7 +674,13 @@ function verDetalleConsultor(id) {
     </div>
 
     <div class="section">
-      <div class="section-title" style="font-size:1.1rem;margin-bottom:15px">📅 Historial Detallado de Salidas Reales</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px;flex-wrap:wrap">
+        <div class="section-title" style="font-size:1.1rem;margin:0">📅 Historial Detallado de Salidas Reales</div>
+        <button class="btn btn-primary btn-sm" onclick="agregarVacacionRealAudit('${c.id}')" style="display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Registrar vacación
+        </button>
+      </div>
       ${realVacs.length === 0 ? 
         '<div class="empty-state" style="padding:40px;background:var(--bg-panel-alt);border-radius:15px"><div class="empty-icon" style="font-size:3rem">📅</div><h4>Sin historial real</h4><p>Importa el archivo de Gestión Real para ver las salidas efectivas</p></div>' :
         `<div class="table-container" style="border:1px solid var(--bg-panel-alt);border-radius:12px"><table style="width:100%">
@@ -703,7 +709,7 @@ function verDetalleConsultor(id) {
     </div>
 
     <div style="margin-top:25px;padding:18px;background:var(--brand-tint-3);border-radius:12px;font-size:0.85rem;color:var(--text-on-light);line-height:1.6;border:1px solid var(--brand-tint-5)">
-      <p><strong>🚨 Nota de Cumplimiento:</strong> El Saldo Oficial (Gabin) indica que la fecha límite legal para goce es el <strong>${c.fechaMaxGabin || 'Pendiente de cálculo'}</strong>. 
+      <p><strong>🚨 Nota de Cumplimiento:</strong> El Saldo Oficial (Gabin) indica que la fecha límite legal para goce es <strong>${formatMesMax(c.fechaMaxGabin) || 'Pendiente de cálculo'}</strong>.
       Cualquier discrepancia positiva (Días Reales > Gabin) debe ser gestionada como deuda interna para evitar riesgos de clima laboral.</p>
     </div>
   `;
@@ -1184,9 +1190,9 @@ function renderCumpleaños() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
           Importar Excel
         </button>
-        <button class="btn btn-primary" onclick="enviarCorreoCumpleaños()" style="display:flex; align-items:center; gap:8px">
+        <button class="btn btn-primary" onclick="enviarCorreoCumpleaños()" title="Vista previa del digest semanal. Cada lunes 8:00 (Lima) se envía automáticamente a nebernal@minsait.com." style="display:flex; align-items:center; gap:8px">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-          Enviar Recordatorio
+          Vista previa semanal
         </button>
       </div>
     </div>
@@ -1312,24 +1318,60 @@ function renderCumpleaños() {
 }
 
 function enviarCorreoCumpleaños() {
-  const d = new Date();
-  const todayMMDD = String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  // Vista previa manual del digest semanal que se envía automáticamente cada lunes 8:00 (Lima)
+  // mediante el workflow .github/workflows/birthday-email.yml.
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const diasSemana = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const weekDays = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    weekDays.push(d);
+  }
+
   const cons = getActiveConsultores();
-  const cumpleañeros = cons.filter(c => {
-    if (!c.cumpleaños) return false;
-    const cDate = new Date(c.cumpleaños + 'T00:00:00');
-    return String(cDate.getMonth()+1).padStart(2,'0') + '-' + String(cDate.getDate()).padStart(2,'0') === todayMMDD;
+  const grupos = weekDays.map(d => {
+    const mmdd = String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const people = cons.filter(c => {
+      if (!c.cumpleaños) return false;
+      const cDate = new Date(c.cumpleaños + 'T00:00:00');
+      return String(cDate.getMonth()+1).padStart(2,'0') + '-' + String(cDate.getDate()).padStart(2,'0') === mmdd;
+    });
+    return { date: d, people };
   });
 
-  if (cumpleañeros.length === 0) {
-    showToast('No hay cumpleaños registrados para hoy.', 'info');
+  const total = grupos.reduce((acc, g) => acc + g.people.length, 0);
+  if (total === 0) {
+    showToast('No hay cumpleaños registrados en los próximos 7 días.', 'info');
     return;
   }
 
-  const nombres = cumpleañeros.map(c => c.nombre).join(', ');
-  const subject = encodeURIComponent('🎂 Recordatorio: Cumpleaños de hoy en el equipo');
-  const body = encodeURIComponent(`Hola equipo,\n\nHoy celebramos el cumpleaños de:\n\n${cumpleañeros.map(c => '• ' + c.nombre).join('\n')}\n\n¡No olviden saludarlos!\n\nAtte,\nSistema VacaPeru`);
-  
+  const start = weekDays[0], end = weekDays[6];
+  const rangoLabel = `${start.getDate()} de ${meses[start.getMonth()]} – ${end.getDate()} de ${meses[end.getMonth()]} ${end.getFullYear()}`;
+
+  const bodyLines = [
+    'Hola Nelson,',
+    '',
+    `Cumpleaños del equipo entre el ${rangoLabel}:`,
+    ''
+  ];
+  for (const g of grupos) {
+    if (g.people.length === 0) continue;
+    const dayLabel = `${diasSemana[g.date.getDay()]} ${g.date.getDate()} de ${meses[g.date.getMonth()]}`;
+    bodyLines.push(`• ${dayLabel}`);
+    for (const p of g.people) {
+      const extra = [p.cargo, p.vertical].filter(Boolean).join(' · ');
+      bodyLines.push(`    - ${p.nombre}${extra ? ` (${extra})` : ''}`);
+    }
+  }
+  bodyLines.push('', '— Recreo · Control de Vacaciones');
+
+  const subject = encodeURIComponent(`🎂 Cumpleaños de la semana (${rangoLabel}) — ${total}`);
+  const body = encodeURIComponent(bodyLines.join('\n'));
+
   const mailto = `mailto:nebernal@minsait.com?subject=${subject}&body=${body}`;
   window.location.href = mailto;
 }

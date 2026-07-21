@@ -163,6 +163,22 @@ function calcDiffDias(f1, f2) {
   return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
 }
 
+// Fecha máxima de salida truncada a mes: "2027-03-01" -> "Marzo 2027".
+// El día es ruido (el límite legal es de mes), así que solo mostramos mes y año.
+function formatMesMax(fecha) {
+  if (!fecha) return '';
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const s = String(fecha).split('T')[0].trim();
+  const parts = s.split(/[\/-]/);
+  let y, m;
+  if (parts.length >= 2) {
+    if (parts[0].length === 4) { y = parts[0]; m = parseInt(parts[1], 10); }
+    else { y = parts[2]; m = parseInt(parts[1], 10); }
+  }
+  if (!y || !m || m < 1 || m > 12) return String(fecha);
+  return `${meses[m-1]} ${y}`;
+}
+
 // ===== CONSULTOR CRUD =====
 function addConsultor(c) {
   c.id = uid();

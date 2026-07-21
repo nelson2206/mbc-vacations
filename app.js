@@ -346,6 +346,59 @@ function guardarRegistroReal() {
   navigateTo(currentView);
 }
 
+// Registrar una nueva vacación real directamente desde el modal de auditoría
+// (verDetalleConsultor). Al guardar, reabre la auditoría del mismo consultor.
+function agregarVacacionRealAudit(cid) {
+  const c = getConsultor(cid);
+  if (!c) return;
+  const body = `
+    <p style="margin-bottom:16px;color:var(--text-muted);font-size:0.9rem">Nueva salida real para <strong>${esc(c.nombre)}</strong></p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Día Inicial</label>
+        <input class="form-control" id="fAuditInicio" type="date" onchange="updateDiasPreview('fAuditInicio', 'fAuditFin', 'auditDiasPreview')">
+      </div>
+      <div class="form-group">
+        <label>Día Final</label>
+        <input class="form-control" id="fAuditFin" type="date" onchange="updateDiasPreview('fAuditInicio', 'fAuditFin', 'auditDiasPreview')">
+      </div>
+    </div>
+    <div id="auditDiasPreview" style="margin-top:10px; font-weight:700; color:var(--accent); font-size:1.1rem">0 días seleccionados</div>
+  `;
+  const footer = `
+    <button class="btn btn-outline" onclick="verDetalleConsultor('${cid}')">Cancelar</button>
+    <button class="btn btn-primary" onclick="guardarVacacionRealAudit('${cid}')">Registrar</button>
+  `;
+  openModal(`Registrar Vacación · ${c.nombre}`, body, footer);
+}
+
+function guardarVacacionRealAudit(cid) {
+  const c = getConsultor(cid);
+  if (!c) return;
+  const fInicio = document.getElementById('fAuditInicio').value;
+  const fFin = document.getElementById('fAuditFin').value;
+
+  if (!fInicio || !fFin) { showToast('Completa ambas fechas', 'error'); return; }
+  if (new Date(fFin) < new Date(fInicio)) { showToast('La fecha final no puede ser antes de la inicial', 'error'); return; }
+
+  if (!c.realVacations) c.realVacations = [];
+  const conflicto = findVacacionSuperpuesta(c.realVacations, fInicio, fFin);
+  if (conflicto) {
+    showToast(`Las fechas se cruzan con un registro existente: ${conflicto.v.inicio} → ${conflicto.v.fin} (${conflicto.v.dias} días, ${conflicto.v.origen})`, 'error');
+    return;
+  }
+
+  c.realVacations.push({
+    inicio: fInicio,
+    fin: fFin,
+    dias: calcDiffDias(fInicio, fFin),
+    origen: 'Manual'
+  });
+  saveData(APP);
+  showToast('Vacación registrada', 'success');
+  verDetalleConsultor(cid); // reabre la auditoría actualizada
+}
+
 function editarVacacionReal(cid, idx) {
   const c = getConsultor(cid);
   if (!c || !c.realVacations || !c.realVacations[idx]) return;
