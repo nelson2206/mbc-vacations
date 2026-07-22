@@ -381,7 +381,8 @@ window.setConsFilter = function() {
 };
 
 function renderConsultores() {
-  let cons = [...APP.consultores];
+  // Los inactivos (ya no en la planilla de Gabin) se conservan en la base pero no figuran.
+  let cons = [...APP.consultores].filter(c => c.estado !== 'inactivo');
   if (consConfig.filter) {
     cons = cons.filter(c => c.nombre.toLowerCase().includes(consConfig.filter) || (c.cargo && c.cargo.toLowerCase().includes(consConfig.filter)));
   }
