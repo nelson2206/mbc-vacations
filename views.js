@@ -381,8 +381,9 @@ window.setConsFilter = function() {
 };
 
 function renderConsultores() {
-  // Los inactivos (ya no en la planilla de Gabin) se conservan en la base pero no figuran.
-  let cons = [...APP.consultores].filter(c => c.estado !== 'inactivo');
+  // La Base de Consultores muestra a todos —activos e inactivos— con su clasificación
+  // en la columna Estado. El resto de vistas sigue ocultando a los inactivos (getActiveConsultores).
+  let cons = [...APP.consultores];
   if (consConfig.filter) {
     cons = cons.filter(c => c.nombre.toLowerCase().includes(consConfig.filter) || (c.cargo && c.cargo.toLowerCase().includes(consConfig.filter)));
   }
@@ -421,6 +422,7 @@ function renderConsultores() {
       `<div class="card"><div class="table-container"><table>
         <thead><tr>
           <th style="cursor:pointer" onclick="setConsSort('nombre')">Nombre${getSortIcon('nombre')}</th>
+          <th>Estado</th>
           <th style="cursor:pointer" onclick="setConsSort('vertical')">Vertical${getSortIcon('vertical')}</th>
           <th style="cursor:pointer" onclick="setConsSort('ingreso')">Ingreso${getSortIcon('ingreso')}</th>
           <th>Antigüedad</th>
@@ -434,8 +436,13 @@ function renderConsultores() {
           const disp = calcDiasDisponibles(c);
           const al = getAlertaLegal(c);
           const cls = al.nivel==='critical'?'red':al.nivel==='warning'?'yellow':'green';
-          return `<tr style="${c.estado==='cesado'?'opacity:0.5':''}">
+          const inactivo = c.estado === 'inactivo' || c.estado === 'cesado';
+          const estadoBadge = inactivo
+            ? '<span class="status" style="background:#9ca3af;color:#fff;padding:4px 10px;font-size:0.72rem;border-radius:10px">Inactivo</span>'
+            : '<span class="status green" style="padding:4px 10px;font-size:0.72rem;border-radius:10px">Activo</span>';
+          return `<tr style="${inactivo?'opacity:0.55':''}">
             <td><strong style="color:var(--bg-panel)">${esc(c.nombre)}</strong></td>
+            <td>${estadoBadge}</td>
             <td><span style="color:var(--text-muted);font-size:0.85rem">${c.cargo || 'Consultor'}</span></td>
             <td>${esc(c.fechaIngreso)}</td>
             <td>${ant.years}a ${ant.months}m</td>
