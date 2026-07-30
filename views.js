@@ -407,7 +407,7 @@ function renderConsultores() {
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
       <div><h1><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:middle"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Base de Consultores</h1><p>Gestión del equipo de consultoría</p></div>
       <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
-        <input type="text" id="filterConsGlobal" class="form-control" placeholder="🔍 Buscar consultor..." value="${consConfig.filter}" onchange="setConsFilter()" style="max-width:250px; padding:8px 14px; font-size:0.8rem;">
+        <input type="text" id="filterConsGlobal" class="form-control" placeholder="🔍 Buscar consultor..." value="${consConfig.filter}" oninput="setConsFilter()" style="max-width:250px; padding:8px 14px; font-size:0.8rem;">
         <button class="btn btn-outline" onclick="openModalRegistroReal()" style="display:flex; align-items:center; gap:8px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
           Registrar Vacación
@@ -675,7 +675,7 @@ function verDetalleConsultor(id) {
           <span style="font-size:1rem;font-weight:700;color:${gozGabin === gozReal ? 'var(--success)' : 'var(--accent)'}">
             ${gozGabin === gozReal ? '✅ Saldos perfectamente conciliados' : 
               gozGabin > gozReal ? `⚠️ Deuda Interna: ${Math.round((gozGabin - gozReal)*100)/100} días por no goce real` : 
-              `⚠️ Exceso de goce: ${Math.round((gozReal - gozGabin)*100)/100} días no registrados en Gabin`}
+              `⚠️ Pendiente registro en Gabin: ${Math.round((gozReal - gozGabin)*100)/100} días gozados no registrados en Gabin`}
           </span>
         </div>
       </div>

@@ -4,6 +4,8 @@ let currentView = 'dashboard';
 
 // ===== NAVIGATION =====
 function navigateTo(view) {
+  // Re-render de la MISMA vista (filtrar/ordenar) conserva el scroll; cambiar de vista sube al tope.
+  const sameView = (view === currentView);
   // Guardar el foco si es un input
   const focusedId = document.activeElement ? document.activeElement.id : null;
   const selectionStart = document.activeElement ? document.activeElement.selectionStart : null;
@@ -34,8 +36,10 @@ function navigateTo(view) {
     }
   }
 
-  main.scrollTop = 0;
-  window.scrollTo(0, 0);
+  if (!sameView) {
+    main.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }
   updateAlertBadge();
   updateConflictosBadge();
   closeSidebarOnMobile();
