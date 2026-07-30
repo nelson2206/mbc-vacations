@@ -742,6 +742,11 @@ function processingRRHH(rows, filename) {
       if (!val) return '';
       if (typeof val === 'number') return fechaPlausible(new Date(Math.round((val - 25569) * 86400 * 1000)).toISOString().slice(0,10));
       if (typeof val === 'string') {
+        // Gabin manda la fecha maxima como texto "Mes AAAA" (ej. "Diciembre 2026").
+        // JS no entiende meses en espanol (new Date cae a enero), asi que lo parseamos aqui.
+        const MESES_ES = {enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,setiembre:9,octubre:10,noviembre:11,diciembre:12};
+        const mes = val.trim().toLowerCase().match(/^([a-záéíóúñ]+)\s+(\d{4})$/);
+        if (mes && MESES_ES[mes[1]]) return `${mes[2]}-${String(MESES_ES[mes[1]]).padStart(2,'0')}-01`;
         const s = val.trim().split(' ')[0]; // Remove time if present
         const parts = s.split(/[\/-]/);
         if (parts.length === 3) {
@@ -795,6 +800,7 @@ function processingRRHH(rows, filename) {
       existing.fechaUltimaImportacion = now;
       if (fechaCorteISO) existing.fechaCorteGabin = fechaCorteISO;
       if (fechaIngreso) existing.fechaIngreso = fechaIngreso;
+      if (existing.estado !== 'activo') existing.estado = 'activo'; // reaparece -> reactivar
       updated++;
     } else {
       existing = {
@@ -826,13 +832,15 @@ function processingRRHH(rows, filename) {
     }
   });
 
-  // Remove consultants that are NO LONGER in the new Gabin snapshot
-  const initialCount = APP.consultores.length;
-  APP.consultores = APP.consultores.filter(c => processedConsultores.has(c.id));
-  const removed = initialCount - APP.consultores.length;
+  // Los que YA NO estan en el snapshot de Gabin no se borran: se marcan 'inactivo'
+  // (se conservan en la base, con su historial de vacaciones, pero no figuran).
+  const inactivados = APP.consultores.filter(c => !processedConsultores.has(c.id));
+  inactivados.forEach(c => { c.estado = 'inactivo'; if (!c.fechaInactivacion) c.fechaInactivacion = now; });
+  const removed = inactivados.length;
 
-  // Snapshot for history
-  const sanitizeKey = (k) => k.replace(/[.#$\[\]\/]/g, '_');
+  // Snapshot for history. Firebase rechaza claves con . # $ [ ] / o caracteres de control
+  // (las cabeceras de Gabin traen saltos de linea), por eso se sanean aqui.
+  const sanitizeKey = (k) => String(k).replace(/[.#$\[\]\/]/g, '_').replace(/[\x00-\x1F\x7F]/g, '_').trim();
   const snapshot = dataRows.map(row => {
     const obj = {};
     headers.forEach((h, i) => { if(h) obj[sanitizeKey(h)] = row[i]; });
@@ -854,7 +862,7 @@ function processingRRHH(rows, filename) {
     datos: snapshot
   });
   saveData(APP);
-  showToast(`RRHH: ${created} nuevos, ${updated} act., ${removed} cesados/removidos`, 'success');
+  showToast(`RRHH: ${created} nuevos, ${updated} act., ${removed} inactivados`, 'success');
   navigateTo('importar');
 }
 
