@@ -634,6 +634,7 @@ function verDetalleConsultor(id) {
   const gozReal = calcDiasGozadosReales(c.id);
   const planificado = calcDiasPlanificadosReales(c.id);
   const realVacs = c.realVacations || [];
+  const desglose = desglosePeriodoEnCurso(c);
   
   const body = `
     <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:25px;margin-bottom:30px">
@@ -680,6 +681,24 @@ function verDetalleConsultor(id) {
         </div>
       </div>
     </div>
+
+    ${desglose.periodo ? `
+    <div class="card" style="margin-bottom:25px;padding:22px;border:1px solid var(--brand-tint-10)">
+      <h4 style="margin-bottom:4px;color:var(--bg-panel);font-size:1.05rem;display:flex;align-items:center;gap:8px">🗓️ <span>Periodo vacacional en curso</span></h4>
+      <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:18px">${esc(desglose.periodo.desde)} al ${esc(desglose.periodo.hasta)} · Política Minsait: 30 días = 22 útiles + 8 fines de semana</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="padding:16px;border-radius:12px;background:var(--bg-panel-alt)">
+          <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Días útiles (L-V)</span>
+          <div style="font-size:1.7rem;font-weight:800;color:var(--bg-panel);margin:2px 0">${desglose.utilesTomados + desglose.utilesProg}<span style="font-size:0.9rem;font-weight:600;color:var(--text-muted)"> / 22</span></div>
+          <div style="font-size:0.78rem;color:var(--text-muted)"><strong style="color:var(--bg-panel)">${desglose.utilesTomados}</strong> tomados · <strong style="color:var(--accent)">${desglose.utilesProg}</strong> programados</div>
+        </div>
+        <div style="padding:16px;border-radius:12px;background:var(--bg-panel-alt)">
+          <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:var(--text-muted)">Fines de semana (S-D)</span>
+          <div style="font-size:1.7rem;font-weight:800;color:var(--bg-panel);margin:2px 0">${desglose.findeTomados + desglose.findeProg}<span style="font-size:0.9rem;font-weight:600;color:var(--text-muted)"> / 8</span></div>
+          <div style="font-size:0.78rem;color:var(--text-muted)"><strong style="color:var(--bg-panel)">${desglose.findeTomados}</strong> tomados · <strong style="color:var(--accent)">${desglose.findeProg}</strong> programados</div>
+        </div>
+      </div>
+    </div>` : ''}
 
     <div class="section">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px;flex-wrap:wrap">

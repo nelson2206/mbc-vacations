@@ -267,6 +267,54 @@ function esVacacionPlanificada(v) {
   return v.inicio > hoyISO;
 }
 
+// Cuenta días útiles (Lun-Vie) y fines de semana (Sáb-Dom) en un rango [inicio, fin] inclusive.
+function contarUtilFinde(inicio, fin) {
+  let utiles = 0, finde = 0;
+  if (!inicio || !fin) return { utiles, finde };
+  let d = new Date(String(inicio).replace(/-/g, '/'));
+  const end = new Date(String(fin).replace(/-/g, '/'));
+  if (isNaN(d) || isNaN(end)) return { utiles, finde };
+  let guard = 0;
+  while (d <= end && guard < 400) {
+    const dow = d.getDay(); // 0=Dom, 6=Sáb
+    if (dow === 0 || dow === 6) finde++; else utiles++;
+    d.setDate(d.getDate() + 1);
+    guard++;
+  }
+  return { utiles, finde };
+}
+
+// Periodo vacacional en curso: desde el último aniversario de ingreso (<= hoy)
+// hasta el día previo al siguiente aniversario. Devuelve fechas ISO YYYY-MM-DD.
+function periodoVacacionalEnCurso(consultor) {
+  if (!consultor || !consultor.fechaIngreso) return null;
+  const ing = new Date(String(consultor.fechaIngreso).replace(/-/g, '/'));
+  if (isNaN(ing)) return null;
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  let desde = new Date(hoy.getFullYear(), ing.getMonth(), ing.getDate());
+  if (desde > hoy) desde = new Date(hoy.getFullYear() - 1, ing.getMonth(), ing.getDate());
+  const hasta = new Date(desde.getFullYear() + 1, ing.getMonth(), ing.getDate());
+  hasta.setDate(hasta.getDate() - 1);
+  return { desde: fmt(desde), hasta: fmt(hasta), numero: desde.getFullYear() - ing.getFullYear() + 1 };
+}
+
+// Desglose útiles/findes (tomados vs programados) de las vacaciones cuyo inicio
+// cae dentro del periodo vacacional en curso.
+function desglosePeriodoEnCurso(consultor) {
+  const p = periodoVacacionalEnCurso(consultor);
+  const base = { periodo: p, utilesTomados: 0, findeTomados: 0, utilesProg: 0, findeProg: 0 };
+  if (!p || !consultor.realVacations) return base;
+  const hoyISO = new Date().toISOString().slice(0, 10);
+  for (const v of consultor.realVacations) {
+    if (!v.inicio || v.inicio < p.desde || v.inicio > p.hasta) continue;
+    const { utiles, finde } = contarUtilFinde(v.inicio, v.fin);
+    if (v.inicio > hoyISO) { base.utilesProg += utiles; base.findeProg += finde; }
+    else { base.utilesTomados += utiles; base.findeTomados += finde; }
+  }
+  return base;
+}
+
 function calcDiasGozadosReales(consultorId) {
   const c = getConsultor(consultorId);
   if (!c || !c.realVacations) return 0;
