@@ -284,30 +284,22 @@ function contarUtilFinde(inicio, fin) {
   return { utiles, finde };
 }
 
-// Periodo vacacional en curso: desde el último aniversario de ingreso (<= hoy)
-// hasta el día previo al siguiente aniversario. Devuelve fechas ISO YYYY-MM-DD.
-function periodoVacacionalEnCurso(consultor) {
-  if (!consultor || !consultor.fechaIngreso) return null;
-  const ing = new Date(String(consultor.fechaIngreso).replace(/-/g, '/'));
-  if (isNaN(ing)) return null;
-  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-  const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  let desde = new Date(hoy.getFullYear(), ing.getMonth(), ing.getDate());
-  if (desde > hoy) desde = new Date(hoy.getFullYear() - 1, ing.getMonth(), ing.getDate());
-  const hasta = new Date(desde.getFullYear() + 1, ing.getMonth(), ing.getDate());
-  hasta.setDate(hasta.getDate() - 1);
-  return { desde: fmt(desde), hasta: fmt(hasta), numero: desde.getFullYear() - ing.getFullYear() + 1 };
-}
-
-// Desglose útiles/findes (tomados vs programados) de las vacaciones cuyo inicio
-// cae dentro del periodo vacacional en curso.
+// Desglose útiles/findes del PERIODO VIGENTE, delimitado por la Fecha Máxima de
+// Salida de Gabin (deadline del saldo pendiente). Ventana = [hoy, fechaMaxGabin].
+// Solo cuenta vacaciones que caen en esa ventana; las de periodos anteriores
+// (que ya terminaron antes de hoy) quedan fuera, para no mezclar récords viejos.
+// tomado/en curso = ya iniciada (inicio <= hoy); programado = futura.
 function desglosePeriodoEnCurso(consultor) {
-  const p = periodoVacacionalEnCurso(consultor);
-  const base = { periodo: p, utilesTomados: 0, findeTomados: 0, utilesProg: 0, findeProg: 0 };
-  if (!p || !consultor.realVacations) return base;
   const hoyISO = new Date().toISOString().slice(0, 10);
+  // fechaMaxGabin se guarda como ISO (YYYY-MM-DD). Si viniera como texto, no hay ventana.
+  const maxRaw = String(consultor && consultor.fechaMaxGabin || '');
+  const maxISO = /^\d{4}-\d{2}-\d{2}/.test(maxRaw) ? maxRaw.slice(0, 10) : '';
+  const base = { hasta: maxISO, sinSaldo: !maxISO, utilesTomados: 0, findeTomados: 0, utilesProg: 0, findeProg: 0 };
+  if (!maxISO || !consultor.realVacations) return base;
   for (const v of consultor.realVacations) {
-    if (!v.inicio || v.inicio < p.desde || v.inicio > p.hasta) continue;
+    if (!v.inicio || !v.fin) continue;
+    if (v.inicio > maxISO) continue; // empieza después del vencimiento -> otro récord
+    if (v.fin < hoyISO) continue;    // ya terminó -> periodo anterior
     const { utiles, finde } = contarUtilFinde(v.inicio, v.fin);
     if (v.inicio > hoyISO) { base.utilesProg += utiles; base.findeProg += finde; }
     else { base.utilesTomados += utiles; base.findeTomados += finde; }
