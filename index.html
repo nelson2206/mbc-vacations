@@ -7,10 +7,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Recreo · Control de Vacaciones del Equipo</title>
   <meta name="description" content="Recreo: herramienta de control de vacaciones para equipos de consultoría en Perú. Cumplimiento normativo DL 713.">
-  <meta name="theme-color" content="#160a26">
+  <meta name="theme-color" content="#001129">
 
   <!-- Favicons -->
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=21">
+  <link rel="icon" href="assets/favicon.ico?v=22">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/icon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png">
@@ -36,7 +36,7 @@
   <meta name="twitter:description" content="Herramienta de control de vacaciones para equipos de consultoría en Perú. Cumplimiento DL 713.">
   <meta name="twitter:image" content="https://vacaciones.mbc-latam.com/assets/og-image.jpg?v=1">
 
-  <link rel="stylesheet" href="styles.css?v=21">
+  <link rel="stylesheet" href="styles.css?v=22">
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   
   <!-- FIREBASE SDK -->
@@ -49,20 +49,10 @@
   <!-- MOBILE HEADER -->
   <header class="mobile-header">
     <div style="display:flex; align-items:center; gap:10px">
-      <!-- Marca MBC: nodo central con 3 nodos conectados -->
-      <svg width="24" height="24" viewBox="0 0 64 64" aria-hidden="true">
-        <g stroke="#ff6a9e" stroke-opacity="0.55" stroke-width="3" stroke-linecap="round">
-          <line x1="32" y1="32" x2="32" y2="15"/>
-          <line x1="32" y1="32" x2="48" y2="43"/>
-          <line x1="32" y1="32" x2="17" y2="44"/>
-        </g>
-        <circle cx="32" cy="15" r="5.5" fill="#ff6a9e"/>
-        <circle cx="48" cy="43" r="4.8" fill="#ffb2b8"/>
-        <circle cx="17" cy="44" r="4.8" fill="#ffb2b8"/>
-        <circle cx="32" cy="32" r="9" fill="#ff0054"/>
-        <circle cx="32" cy="32" r="3.6" fill="#fffaf0"/>
-      </svg>
-      <strong style="font-size:1.15rem; letter-spacing:2px">RECREO</strong>
+      <!-- Marca oficial MBC (wordmark, versión blanca sobre fondo oscuro) -->
+      <img src="assets/marca-mbc/mbc-logo-blanco.svg" alt="MBC" style="height:18px;width:auto;display:block">
+      <span style="opacity:0.35">|</span>
+      <strong style="font-size:0.95rem; letter-spacing:2px">RECREO</strong>
     </div>
     <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Abrir menú" aria-controls="sidebar" aria-expanded="false">☰</button>
   </header>
@@ -73,23 +63,11 @@
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand" role="banner">
-      <p class="brand-mark">
-        <!-- Marca MBC: nodo central con 3 nodos conectados -->
-        <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true" style="flex-shrink:0">
-          <g stroke="#ff6a9e" stroke-opacity="0.55" stroke-width="3" stroke-linecap="round">
-            <line x1="32" y1="32" x2="32" y2="15"/>
-            <line x1="32" y1="32" x2="48" y2="43"/>
-            <line x1="32" y1="32" x2="17" y2="44"/>
-          </g>
-          <circle cx="32" cy="15" r="5.5" fill="#ff6a9e"/>
-          <circle cx="48" cy="43" r="4.8" fill="#ffb2b8"/>
-          <circle cx="17" cy="44" r="4.8" fill="#ffb2b8"/>
-          <circle cx="32" cy="32" r="9" fill="#ff0054"/>
-          <circle cx="32" cy="32" r="3.6" fill="#fffaf0"/>
-        </svg>
-        <span>Recreo</span>
+      <p class="brand-mark" style="display:block">
+        <!-- Marca oficial MBC (wordmark, versión blanca sobre fondo oscuro) -->
+        <img src="assets/marca-mbc/mbc-logo-blanco.svg" alt="MBC" style="height:24px;width:auto;display:block">
       </p>
-      <p class="brand-tag">Control de Vacaciones</p>
+      <p class="brand-tag">Recreo · Control de Vacaciones</p>
     </div>
     <nav class="sidebar-nav" aria-label="Navegación principal">
       <div class="sidebar-section">
@@ -197,11 +175,11 @@
   <!-- Skip link a contenido principal -->
   <style>
     .skip-link { position:absolute; left:-9999px; top:0; z-index:10000; }
-    .skip-link:focus { left:12px; top:12px; padding:10px 14px; background:#160a26; color:#fff; border-radius:8px; }
+    .skip-link:focus { left:12px; top:12px; padding:10px 14px; background:#001129; color:#fff; border-radius:8px; }
   </style>
 
-  <script src="data.js?v=21"></script>
-  <script src="views.js?v=21"></script>
-  <script src="app.js?v=21"></script>
+  <script src="data.js?v=22"></script>
+  <script src="views.js?v=22"></script>
+  <script src="app.js?v=22"></script>
 </body>
 </html>
