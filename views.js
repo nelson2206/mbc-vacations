@@ -178,7 +178,7 @@ function renderDashboard() {
       </div>
     </div>
     
-    <section class="hero-strip" aria-label="Resumen del equipo">
+    <section class="hero-strip" aria-label="Resumen del equipo" style="margin-top:26px">
       <div class="stat-card lead">
         <div class="stat-label">El equipo</div>
         <div class="stat-value" data-numeric>${cons.length}</div>
@@ -213,7 +213,7 @@ function renderDashboard() {
               <div class="risk-header-icon">🔴</div>
               <div class="risk-header-text">
                 <h4>Crítico</h4>
-                <p>Triple vacacional inminente</p>
+                <p>Riesgo de penalización</p>
               </div>
               <div class="risk-header-count">
                 <span class="risk-count">${criticos.length}</span>
