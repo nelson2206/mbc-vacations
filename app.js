@@ -723,7 +723,17 @@ function processingRRHH(rows, filename) {
   const idxIngreso = cleanH.findIndex(h => h.includes('FECHA INGRESO') || h.includes('INGRESO'));
   const idxVigentes = cleanH.findIndex(h => h === 'N° DE DÍAS' || h.includes('VIGENTES') || h.includes('PENDIENTES'));
   const idxMaxSalida = cleanH.findIndex(h => h.includes('MAX. DE SALIDA') || h.includes('VENCIMIENTO'));
-  const idxTruncos = headers.findIndex((h, i) => String(h).toUpperCase() === 'N° DE DÍAS' && String(subHeaders[i]).toUpperCase() === 'TRUNCOS');
+  // Truncos: soporta los dos formatos de Gabin.
+  //  - .xlsx antiguo: cabecera en dos filas ("N° DE DÍAS" + subcabecera "TRUNCOS")
+  //  - reporte HTML nuevo: cabecera fusionada en una celda ("N° DE DÍAS\nTRUNCOS")
+  // Se excluye la columna TOTAL, que nombra TRUNCOS dentro de su fórmula
+  // ("TOTAL DE DÍAS (VIGENTES + INDEMNIZABLES + TRUNCOS)").
+  const normH = (s) => String(s).toUpperCase().replace(/\s+/g, ' ').trim();
+  const idxTruncos = headers.findIndex((h, i) => {
+    const H = normH(h);
+    if (H === 'N° DE DÍAS' && normH(subHeaders[i]) === 'TRUNCOS') return true;
+    return H.includes('TRUNCOS') && !H.includes('TOTAL');
+  });
   
   let updated = 0, created = 0;
   const now = new Date().toISOString();
